@@ -1,0 +1,68 @@
+name: consumer fixture (java)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [upstream-changed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          persist-credentials: false
+
+      # An upstream dispatch carries the sha to test; a normal push tests the
+      # pinned submodule as committed.
+      - name: Repoint the vendored library at the dispatched commit
+        if: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' }}
+        env:
+          UPSTREAM_SHA: ${{ github.event.client_payload.sha }}
+        run: |
+          set -euo pipefail
+          cd .vendor/.zed/oresoftware/flags-2-env
+          git fetch --depth 1 origin "$UPSTREAM_SHA"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$UPSTREAM_SHA"
+
+      - name: Confirm the vendored library is really there
+        run: |
+          set -euo pipefail
+          test -f .vendor/.zed/oresoftware/flags-2-env/src/parser.c
+          echo "pinned upstream: $(git -C .vendor/.zed/oresoftware/flags-2-env rev-parse HEAD)"
+
+      - name: Confirm .zpkg.toml and the vendored path agree
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import tomllib, pathlib
+          zed = tomllib.loads(pathlib.Path(".zpkg.toml").read_text())
+          assert zed["package"]["org"] == "flags-2-env-test", zed["package"]["org"]
+          assert list(zed["dependencies"]) == ["oresoftware/flags-2-env"], zed["dependencies"]
+          install_dir = zed["install"]["dir"]
+          vendored = pathlib.Path(install_dir) / "oresoftware" / "flags-2-env"
+          assert (vendored / "src" / "parser.c").is_file(), f"{vendored} is not populated"
+          gitmodules = pathlib.Path(".gitmodules").read_text()
+          assert str(vendored) in gitmodules, "submodule path does not match [install].dir"
+          assert "ORESoftware/flags-2-env" in gitmodules, "submodule points somewhere unexpected"
+          print("manifest and vendored tree agree")
+          PY
+
+      - name: Build the fixture image
+        run: docker build --tag f2e-fixture-java .
+
+      - name: Assert the contract
+        run: docker run --rm f2e-fixture-java

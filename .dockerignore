@@ -1,0 +1,9 @@
+.git
+**/.git
+.github
+.gitmodules
+**/target
+**/node_modules
+**/build/*.o
+**/build/*.dylib
+**/build/*.dll

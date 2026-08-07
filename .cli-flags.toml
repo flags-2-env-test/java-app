@@ -1,0 +1,42 @@
+# The whole point of these fixtures: this file is byte-identical in all twelve
+# consumer repositories. Every runtime must turn the same argv into the same
+# environment map. If one of them disagrees, the binding is wrong.
+[help]
+url = "https://github.com/ORESoftware/flags-2-env"
+columns = ["options", "env", "type", "default", "description"]
+
+[flags.port]
+env = "PORT"
+aliases = ["port", "listen-port"]
+short = "p"
+type = "integer"
+default = 3000
+help = "TCP port for the demo listener."
+
+[flags.debug]
+env = "DEBUG"
+aliases = ["debug"]
+short = "d"
+type = "bool"
+default = "false"
+true_aliases = ["t", "1", "yes"]
+false_aliases = ["f", "0", "no"]
+help = "Enable debug logging."
+
+[flags.mode]
+env = "APP_ENV"
+aliases = ["mode", "env"]
+short = "m"
+type = "string"
+default = "development"
+help = "Runtime environment name."
+
+[flags.color]
+env = "COLOR"
+aliases = ["color"]
+short = "c"
+type = "bool"
+default = "true"
+true_aliases = ["t", "1"]
+false_aliases = ["f", "0"]
+help = "Colorize output."
