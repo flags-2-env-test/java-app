@@ -1,0 +1,12 @@
+# DL3008/DL3016/DL3018: apt and npm versions are deliberately unpinned. The base
+# image is pinned by digest, which fixes the package index these resolve
+# against, so pinning again inside the layer adds churn without adding
+# determinism.
+#
+# DL3059: consecutive RUN layers are kept separate where the split marks a real
+# boundary (dependency build vs consumer build) and makes a failure easier to
+# place.
+ignored:
+  - DL3008
+  - DL3016
+  - DL3059

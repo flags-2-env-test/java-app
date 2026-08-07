@@ -15,12 +15,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # sha256 of the .cli-flags.toml every fixture in this organization ships.
+  CONFIG_SHA: 4670e6cbae5cf02a5a1683cfda166b451d991058ab7949aad67fcc4ab3e6085f
+  IMAGE: f2e-fixture-java
+
 jobs:
   fixture:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           submodules: true
           persist-credentials: false
@@ -33,6 +38,10 @@ jobs:
           UPSTREAM_SHA: ${{ github.event.client_payload.sha }}
         run: |
           set -euo pipefail
+          [[ "$UPSTREAM_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "dispatched sha is not an immutable full commit: $UPSTREAM_SHA" >&2
+            exit 1
+          }
           cd .vendor/.zed/oresoftware/flags-2-env
           git fetch --depth 1 origin "$UPSTREAM_SHA"
           git checkout --detach FETCH_HEAD
@@ -44,25 +53,92 @@ jobs:
           test -f .vendor/.zed/oresoftware/flags-2-env/src/parser.c
           echo "pinned upstream: $(git -C .vendor/.zed/oresoftware/flags-2-env rev-parse HEAD)"
 
+      # A submodule can be pointed at any commit that exists anywhere, including
+      # a fork or an abandoned branch. This proves the pin is a commit the
+      # canonical repository actually publishes.
+      - name: Confirm the pin is a published upstream commit
+        if: ${{ github.event_name != 'repository_dispatch' }}
+        run: |
+          set -euo pipefail
+          pinned="$(git -C .vendor/.zed/oresoftware/flags-2-env rev-parse HEAD)"
+          probe="$(mktemp -d)"
+          git init -q "$probe"
+          git -C "$probe" remote add origin https://github.com/ORESoftware/flags-2-env
+          git -C "$probe" fetch -q --depth 1 origin "$pinned"
+          test "$(git -C "$probe" rev-parse FETCH_HEAD)" = "$pinned"
+          echo "$pinned is published by ORESoftware/flags-2-env"
+
+      - name: Confirm the flag contract matches the organization-wide digest
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum .cli-flags.toml | cut -d' ' -f1)"
+          if [ "$actual" != "$CONFIG_SHA" ]; then
+            echo "::error file=.cli-flags.toml::this fixture's flag contract has diverged from the other eleven" >&2
+            echo "expected $CONFIG_SHA" >&2
+            echo "actual   $actual" >&2
+            exit 1
+          fi
+          echo ".cli-flags.toml matches the organization-wide contract"
+
       - name: Confirm .zpkg.toml and the vendored path agree
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import tomllib, pathlib
+          import pathlib
+          import tomllib
+
           zed = tomllib.loads(pathlib.Path(".zpkg.toml").read_text())
           assert zed["package"]["org"] == "flags-2-env-test", zed["package"]["org"]
           assert list(zed["dependencies"]) == ["oresoftware/flags-2-env"], zed["dependencies"]
+
           install_dir = zed["install"]["dir"]
           vendored = pathlib.Path(install_dir) / "oresoftware" / "flags-2-env"
           assert (vendored / "src" / "parser.c").is_file(), f"{vendored} is not populated"
+
           gitmodules = pathlib.Path(".gitmodules").read_text()
           assert str(vendored) in gitmodules, "submodule path does not match [install].dir"
           assert "ORESoftware/flags-2-env" in gitmodules, "submodule points somewhere unexpected"
           print("manifest and vendored tree agree")
           PY
 
+      - name: Lint the Dockerfile
+        run: |
+          set -euo pipefail
+          docker run --rm -i -v "$PWD/.hadolint.yaml:/.hadolint.yaml:ro" \
+            ghcr.io/hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e hadolint --config /.hadolint.yaml - < Dockerfile
+
+      - name: Confirm the base image is pinned by digest
+        run: |
+          set -euo pipefail
+          grep -Eq '^FROM [^ ]+@sha256:[0-9a-f]{64}$' Dockerfile || {
+            echo "::error file=Dockerfile::base image is not pinned by digest" >&2
+            exit 1
+          }
+
       - name: Build the fixture image
-        run: docker build --tag f2e-fixture-java .
+        run: docker build --tag "$IMAGE" .
 
       - name: Assert the contract
-        run: docker run --rm f2e-fixture-java
+        run: docker run --rm "$IMAGE"
+
+      # A fixture that cannot fail is not a test. This mounts a contract with one
+      # altered default over the real one and requires the container to go red.
+      # If it still exits 0 the assertions are not reaching the parser, and the
+      # green run above meant nothing.
+      - name: Prove the assertions can fail
+        run: |
+          set -euo pipefail
+          mutant="$(mktemp -d)/.cli-flags.toml"
+          sed 's/^default = 3000$/default = 3001/' .cli-flags.toml > "$mutant"
+          if ! cmp -s .cli-flags.toml "$mutant"; then
+            echo "mutation applied: PORT default 3000 -> 3001"
+          else
+            echo "::error::mutation did not change the contract; the vacuity check is itself broken" >&2
+            exit 1
+          fi
+
+          if docker run --rm -v "$mutant:/app/.cli-flags.toml:ro" "$IMAGE"; then
+            echo "::error::the fixture passed against a mutated contract -- its assertions are vacuous" >&2
+            exit 1
+          fi
+          echo "the fixture correctly rejects a mutated contract"

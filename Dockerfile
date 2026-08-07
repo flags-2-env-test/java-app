@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jdk@sha256:efd34b940f2d5a621605c8531c2afb7759c936b6c2ef637a69aa3bf3e1e789d1
 
 WORKDIR /app
 
@@ -22,8 +22,11 @@ RUN mkdir -p /app/native \
 COPY .cli-flags.toml ./
 COPY src ./src
 
-RUN javac -d /tmp/classes \
+RUN javac -Xlint:all -d /tmp/classes \
       .vendor/.zed/oresoftware/flags-2-env/clients/java/src/main/java/com/oresoftware/flags2env/Flags2Env.java \
       src/main/java/test/flags2env/Demo.java
+
+RUN useradd --create-home --shell /bin/sh --uid 10001 fixture
+USER fixture
 
 CMD ["java", "-Djava.library.path=/app/native", "-cp", "/tmp/classes", "test.flags2env.Demo"]

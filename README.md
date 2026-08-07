@@ -77,3 +77,55 @@ is true.
 ## License
 
 MIT. The vendored library is MIT as well; see its own `LICENSE`.
+
+## What keeps this fixture honest
+
+A consumer fixture is only worth running if a green result rules something out.
+Six things here exist to make that true:
+
+**The assertions are proven able to fail.** CI mounts a `.cli-flags.toml` with
+one altered default over the real one and requires the container to exit
+non-zero. A fixture that passes against a mutated contract is not reaching the
+parser, and its green run means nothing — so that case is a CI failure, not a
+curiosity.
+
+**The base image is pinned by digest.** These twelve images exist to answer one
+question: did the library change behavior. A floating base tag adds a second
+possible cause for a red build that looks exactly like the first.
+
+**The dependency resolution is locked.** `cargo --locked`, `dart pub get
+--enforce-lockfile`, and a committed Gleam `manifest.toml` where each applies.
+An unpinned transitive dependency is one more thing that can turn this red
+without the library having moved.
+
+**The flag contract is checked against an organization-wide digest.** Each
+fixture carries the sha256 of the `.cli-flags.toml` all twelve share and fails
+if its own copy has drifted. The cross-repository half of that check lives in
+`downstream-consumers.yml` upstream, which fetches all twelve and proves they
+are one file — because twelve repositories edited together could otherwise stay
+self-consistent while agreeing on nothing real.
+
+**The submodule pin is proven to be a published commit.** A submodule can point
+at any commit that exists anywhere, including on a fork or an abandoned branch.
+CI fetches the pinned sha from `ORESoftware/flags-2-env` by name and fails if
+the canonical repository does not have it.
+
+**The container runs as a non-root user.** Nothing here needs root at runtime.
+A fixture that quietly required it would be encoding a permission assumption
+that real consumers of this library do not share.
+
+The Dockerfile is linted with `hadolint`; `.hadolint.yaml` records which rules
+are waived and why.
+
+## Running the checks yourself
+
+```bash
+# the fixture itself
+docker build -t f2e-fixture-java .
+docker run --rm f2e-fixture-java
+
+# prove it can fail
+sed 's/^default = 3000$/default = 3001/' .cli-flags.toml > /tmp/mutant.toml
+docker run --rm -v /tmp/mutant.toml:/app/.cli-flags.toml:ro f2e-fixture-java
+# ^ this one must exit non-zero
+```
