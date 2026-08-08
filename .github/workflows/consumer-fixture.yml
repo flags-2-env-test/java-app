@@ -53,6 +53,28 @@ jobs:
           test -f .vendor/.zed/oresoftware/flags-2-env/src/parser.c
           echo "pinned upstream: $(git -C .vendor/.zed/oresoftware/flags-2-env rev-parse HEAD)"
 
+      # The vendored library ships its own memory-safety gate: a custom
+      # borrow checker enforcing the F2E_OWNED_RESULT / F2E_TAKES_OWNED_ARG_1
+      # ownership contract (tools/borrow-checker in the pinned upstream).
+      # Run it against the exact sources this consumer compiles. Skipped
+      # only while the pin predates the tool; the upstream-changed dispatch
+      # exercises it as soon as upstream main carries it.
+      - name: Borrow-check the vendored parser
+        run: |
+          set -euo pipefail
+          vendored=.vendor/.zed/oresoftware/flags-2-env
+          checker="$vendored/tools/borrow-checker/borrow_check.py"
+          if [ ! -f "$checker" ]; then
+            echo "pinned upstream predates the borrow checker; skipping"
+            exit 0
+          fi
+          python3 "$checker" --self-test
+          python3 "$checker" \
+            -I"$vendored" -I"$vendored/src" \
+            --header-contract "$vendored/src/parser.h" \
+            --header-contract "$vendored/src/terminal_context.h" \
+            "$vendored/src/parser.c" "$vendored/src/terminal_context.c"
+
       # A submodule can be pointed at any commit that exists anywhere, including
       # a fork or an abandoned branch. This proves the pin is a commit the
       # canonical repository actually publishes.
