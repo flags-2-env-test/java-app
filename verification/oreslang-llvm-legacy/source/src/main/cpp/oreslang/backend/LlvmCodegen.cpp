@@ -896,26 +896,67 @@ std::string emit_verified_llvm_ir(const Program& source) {
                 auto* whenFalse = llvm::BasicBlock::Create(context, "match.false", fn);
                 auto* joined = llvm::BasicBlock::Create(context, "match.join", fn);
                 builder.CreateCondBr(condition, whenTrue, whenFalse);
-                // The parser proves exactly two exhaustive, nonoverlapping
-                // bool arms; no implicit fallthrough or untyped default.
+                std::vector<std::pair<llvm::Value*, llvm::BasicBlock*>> copiedResults;
+                // Each bool arm has exclusive admission for the duration of
+                // its synchronous sealed callback. No loan pointer escapes.
                 for (const auto& arm : method.boolean_arms) {
                     builder.SetInsertPoint(arm.match_value ? whenTrue : whenFalse);
-                    for (const auto& assignment : arm.assignments) {
-                        const auto field = std::find_if(actor.fields.begin(), actor.fields.end(),
-                            [&](const LocalBinding& f) { return f.name == assignment.field; });
-                        if (field == actor.fields.end() || !field->field_mutable)
-                            throw std::runtime_error("invalid receive match field mutation");
-                        auto* updated = lower(*assignment.value, builder, i64,
-                                              parameters, locals, declarations);
-                        builder.CreateCall(fieldWrite,
-                            {heap, currentDomain, currentEpoch,
-                             llvm::ConstantInt::get(i64,
-                                std::distance(actor.fields.begin(), field)), updated});
-                        builder.CreateStore(updated, locals.at(assignment.field));
+                    if (!arm.assignments.empty())
+                        throw std::runtime_error("direct actor boolean field mutation forbidden");
+                    if (arm.state_loan) {
+                        const auto& loan = *arm.state_loan;
+                        auto loanLocals = locals;
+                        for (std::size_t i = 0; i < actor.fields.size(); ++i) {
+                            const auto& field = actor.fields[i];
+                            const auto borrowed = "@state." + field.name;
+                            bool needsRead = uses_scalar_name(*loan.result, borrowed);
+                            bool willWrite = false;
+                            for (const auto& assignment : loan.assignments) {
+                                if (assignment.field == field.name) willWrite = true;
+                                needsRead |= uses_scalar_name(*assignment.value, borrowed);
+                            }
+                            if (!needsRead && !willWrite) continue;
+                            auto* key = builder.CreateAlloca(i64, nullptr,
+                                "state." + field.name);
+                            if (needsRead) {
+                                auto* snapshot = builder.CreateCall(fieldRead,
+                                    {heap, currentDomain, currentEpoch,
+                                     llvm::ConstantInt::get(i64, i)},
+                                    "state.snapshot." + field.name);
+                                builder.CreateStore(snapshot, key);
+                            }
+                            loanLocals.emplace(borrowed, key);
+                        }
+                        for (const auto& assignment : loan.assignments) {
+                            const auto it = std::find_if(actor.fields.begin(), actor.fields.end(),
+                                [&](const LocalBinding& f) { return f.name == assignment.field; });
+                            if (it == actor.fields.end() || !it->field_mutable)
+                                throw std::runtime_error("invalid boolean state loan field");
+                            auto* updated = lower(*assignment.value, builder, i64,
+                                parameters, loanLocals, declarations);
+                            const auto index = std::distance(actor.fields.begin(), it);
+                            builder.CreateCall(fieldWrite,
+                                {heap, currentDomain, currentEpoch,
+                                 llvm::ConstantInt::get(i64, index), updated});
+                            builder.CreateStore(updated, loanLocals.at("@state." + assignment.field));
+                        }
+                        auto* copied = lower(*loan.result, builder, i64,
+                            parameters, loanLocals, declarations);
+                        copiedResults.emplace_back(copied, builder.GetInsertBlock());
                     }
                     builder.CreateBr(joined);
                 }
                 builder.SetInsertPoint(joined);
+                if (!copiedResults.empty()) {
+                    if (copiedResults.size() != method.boolean_arms.size())
+                        throw std::runtime_error("boolean state result missing on some arms");
+                    const auto& name = method.boolean_arms.front().state_loan->result_binding;
+                    auto* merged = builder.CreatePHI(i64,
+                        static_cast<unsigned>(copiedResults.size()), "bool.state.loan.copy");
+                    for (const auto& [copy, block] : copiedResults)
+                        merged->addIncoming(copy, block);
+                    parameters.emplace(name, merged);
+                }
             }
             for (const auto& assignment : method.assignments) {
                 const auto match = std::find_if(actor.fields.begin(), actor.fields.end(),

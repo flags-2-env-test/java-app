@@ -181,3 +181,19 @@ endfunction()
 sanitized_tagged(historical_nominal_payloadless_asan source-tagged-payloadless-dispatch.ores "processed=3 last=14")
 sanitized_tagged(historical_nominal_int_payload_asan source-tagged-int-payload-dispatch.ores "processed=3 last=23")
 sanitized_tagged(historical_signed_i64_asan source-tagged-int64-canonical-boundaries.ores "processed=9 last=-4294999972")
+
+add_test(NAME historical_boolean_state_copy_phi
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-match.ores
+ --ir "bool.state.loan.copy")
+guest_runtime(historical_boolean_received_guest message-receive-bool-match.ores
+ --stderr "processed=2 last=3")
+add_test(NAME historical_boolean_received_asan_ubsan
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-match.ores
+ --run 43 --clang ${ORE_CLANG} --runs 2 --sanitize
+ --actor-runtime ${RUNTIME}/ActorOwnedI64Heap.c
+ --scheduler-runtime ${RUNTIME}/NativeActorScheduler.c
+ --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c
+ --stderr "processed=2 last=3")
+set_tests_properties(historical_boolean_received_asan_ubsan PROPERTIES TIMEOUT 120)

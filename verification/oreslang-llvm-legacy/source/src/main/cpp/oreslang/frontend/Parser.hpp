@@ -60,12 +60,6 @@ struct FieldAssignment {
     std::size_t offset = 0;
 };
 
-struct ReceiveBooleanArm {
-    bool match_value = false;
-    std::vector<FieldAssignment> assignments;
-    std::size_t offset = 0;
-};
-
 // Static admission representation for source `match m over { on Enum.Case
 // as (...) { } }`. Bodies remain unavailable to native codegen; matching
 // contracts are checked before the explicit fail-closed lowering gate.
@@ -77,6 +71,13 @@ struct StateLoan {
     std::string result_binding;
     std::vector<FieldAssignment> assignments;
     std::unique_ptr<Expression> result;
+};
+
+struct ReceiveBooleanArm {
+    bool match_value = false;
+    std::vector<FieldAssignment> assignments; // legacy direct writes rejected
+    std::unique_ptr<StateLoan> state_loan;
+    std::size_t offset = 0;
 };
 
 struct TaggedReceiveArm {

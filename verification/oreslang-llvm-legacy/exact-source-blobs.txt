@@ -1,7 +1,7 @@
-81c51d042df23fdf327a7880c9da3ee4d5d47228  source/src/main/cpp/oreslang/backend/LlvmCodegen.cpp
+897f1c770b48c518b74a71a9b90021c9ded83af5  source/src/main/cpp/oreslang/backend/LlvmCodegen.cpp
 44d5336cc7131f21a2990433a584cab5d40e1006  source/src/main/cpp/oreslang/backend/LlvmCodegen.hpp
-8a5198c44f3db668e90e6b928a5d3d226cb23764  source/src/main/cpp/oreslang/frontend/Parser.cpp
-113c5d1572ef5c2858382593640ef591a4ce9128  source/src/main/cpp/oreslang/frontend/Parser.hpp
+abef4a98941a4eade320a70764181c2b75ee89b1  source/src/main/cpp/oreslang/frontend/Parser.cpp
+20d4052fe00d876f0e8f84a3e8e8d8700745b204  source/src/main/cpp/oreslang/frontend/Parser.hpp
 8b547a85207c999417b2d97180a3ac9866d4a933  source/src/main/cpp/oreslang/main.cpp
 d7c408f47f0955c99b50ad3381ccff96ec742dc2  source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c
 5f239f6ddfb6612ea54b1f52b72773ceba746a59  source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.h
@@ -34,6 +34,7 @@ fac19869b9b83174947d4caa2ba6ce9532064a7b  source/tests/fixtures/actor-method-sta
 8c3b59f6e820166795004d24bcb1cef1057a40f0  source/tests/fixtures/actor-unknown-field.ores
 40316ffefdf38f5a856eb63f46ea5a11a9c167f1  source/tests/fixtures/actor-unknown-write.ores
 eea478a5448408b7eed4e99362cda4ce77a378d2  source/tests/fixtures/actor-unsupported-field.ores
+093561bd687c10af0ae9effce9e494d1149774c0  source/tests/fixtures/message-receive-bool-match.ores
 6acc01f731dfaaaa7049e71b8ae1b6aa210bf7a0  source/tests/fixtures/source-actor-five-workers.ores
 7c57e51cc2b8cce1f3b112ddd0e58f2e699b6724  source/tests/fixtures/source-actor-pipeline-bidirectional.ores
 d7c1a902986c6e3a1fcf44cff58babb1e8083a2e  source/tests/fixtures/source-actor-send.ores
