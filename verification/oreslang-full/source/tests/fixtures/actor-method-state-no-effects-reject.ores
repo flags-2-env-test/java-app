@@ -1,0 +1,7 @@
+define actor Counter as
+    state { value: int = 1; }
+    pub fnc current(): int {
+        const answer = self.handle_state(|state| -> { return state.value; });
+        return answer;
+    }
+end

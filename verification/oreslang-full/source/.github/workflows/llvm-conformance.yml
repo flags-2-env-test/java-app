@@ -1,0 +1,68 @@
+name: LLVM conformance contract
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify conformance runner failure handling
+        run: |
+          python3 contracts/v1/test_runner.py -v
+          python3 contracts/v1/semantics/test_runner.py -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify TypeSpec models
+        run: npm --prefix contracts/v1 install --no-audit --no-fund && npm --prefix contracts/v1 run build && ./contracts/v1/node_modules/.bin/tsp compile contracts/v1/semantics && ./contracts/v1/node_modules/.bin/tsp compile contracts/v1/semantics/traces
+      - name: Prepare Python schema validator
+        run: python3 -m pip install --break-system-packages 'jsonschema>=4.20,<5'
+      - name: Verify metamorphic generator and adversarial actor trace contracts
+        run: |
+          python3 contracts/v1/semantics/metamorphic.py --self-test --count 512 --seed 20261009
+          python3 contracts/v1/semantics/test_metamorphic.py -v
+          python3 contracts/v1/semantics/traces/validate.py --schema-only
+          python3 contracts/v1/semantics/traces/test_trace.py -v
+      - name: Validate suite schema and fixture inventory
+        run: |
+          python3 contracts/v1/run.py --validate
+          python3 contracts/v1/semantics/run.py --validate
+      - name: Install LLVM
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake clang llvm-dev
+      - name: Compile Oreslang
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+          cmake --build build --parallel 2
+          ctest --test-dir build --output-on-failure
+      - name: Check REAL carrier admission and handler traces
+        run: python3 contracts/v1/semantics/traces/native_probe.py --binary ./build/oreslang-actor-trace-test --repeat 12 --timeout 15
+      - name: Check normative LLVM admissions
+        run: python3 contracts/v1/run.py --backend llvm --command './build/oreslang-llvmc {source}' --report build/conformance-llvm.json
+      - name: Check compiled native results and diagnostic semantics
+        run: python3 contracts/v1/semantics/run.py --backend llvm --command './build/oreslang-llvmc {source}' --clang clang --revision "${{ github.sha }}" --report build/semantics-llvm.json
+      - name: Verify seeded native metamorphic arithmetic
+        run: |
+          python3 contracts/v1/semantics/metamorphic.py --command './build/oreslang-llvmc {source}' --clang clang --count 32 --seed 20261008 --report build/metamorphic-llvm.json
+      - name: Expanded multi-seed native metamorphic execution
+        run: |
+          python3 contracts/v1/semantics/metamorphic.py --command './build/oreslang-llvmc {source}' --clang clang --count 64 --seed 20261009 --report build/metamorphic-llvm-seed-20261009.json
+          python3 contracts/v1/semantics/metamorphic.py --command './build/oreslang-llvmc {source}' --clang clang --count 64 --seed 314159 --report build/metamorphic-llvm-seed-314159.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: llvm-conformance-report
+          path: |
+            build/conformance-llvm.json
+            build/semantics-llvm.json
+            build/metamorphic-llvm.json
+            build/metamorphic-llvm-seed-20261009.json
+            build/metamorphic-llvm-seed-314159.json
+          if-no-files-found: ignore

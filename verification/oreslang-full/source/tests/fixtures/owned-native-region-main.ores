@@ -1,0 +1,7 @@
+// Every owned int lives in a native region; drops run before return.
+pub fnc main(): int {
+  const a: owned int = 6;
+  val b: owned int = a * 7;
+  const c: int = b;
+  return c;
+}

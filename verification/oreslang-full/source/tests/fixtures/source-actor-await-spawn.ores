@@ -1,0 +1,9 @@
+define actor Worker as {
+  const base: int = 42;
+  pub fnc read(): int { return base; }
+}
+pub fnc main(): int {
+  const worker = await spawn Worker();
+  stop worker;
+  return 42;
+}

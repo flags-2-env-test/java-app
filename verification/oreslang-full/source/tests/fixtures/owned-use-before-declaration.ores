@@ -1,0 +1,5 @@
+pub fnc main(): int {
+  val x: int = y;
+  const y: int = 42;
+  return x;
+}

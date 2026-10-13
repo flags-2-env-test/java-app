@@ -1,0 +1,16 @@
+// Pipeline backward is not a regular actor method or raw send alias.
+// The LLVM source compiler must reject before emitting IR until
+// scheduler-bound PipelineContext guest lowering exists.
+define actor Worker as {
+    let total: int = 0;
+    pub fnc on_message(int n): int {
+        self.backward(n);
+        return total;
+    }
+}
+pub fnc main(): int {
+    const worker = spawn Worker();
+    worker.send(1);
+    stop worker;
+    return 43;
+}

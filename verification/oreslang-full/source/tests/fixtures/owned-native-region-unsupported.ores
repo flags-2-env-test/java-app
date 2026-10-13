@@ -1,0 +1,4 @@
+pub fnc main(): int {
+  const bad: owned Widget = new Widget();
+  return 0;
+}

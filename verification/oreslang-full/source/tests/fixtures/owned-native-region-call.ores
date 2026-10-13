@@ -1,0 +1,9 @@
+fnc add(int x): int {
+  const inner: owned int = x + 1;
+  return inner;
+}
+pub fnc main(): int {
+  const first: owned int = 39;
+  val second: owned int = add(first);
+  return second + 2;
+}

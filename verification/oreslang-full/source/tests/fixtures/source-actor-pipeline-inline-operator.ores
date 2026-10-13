@@ -1,0 +1,71 @@
+// Fully source-defined linear typed actor round trip.
+// No handwritten callback or C actor handler participates in this program.
+// SOURCE receives Data(5), forwards Data(5); TRANSFORM forwards Data(10);
+// SINK sends Result(13) backwards; TRANSFORM sends Result(14) backwards;
+// SOURCE finishes with state 5 + 14 = 19, checked before teardown.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end
+
+define actor Source<messages=PipeMessages> as
+    let count: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                count = count + n;
+                self.forward(Signal.Data(count));
+            }
+            on Signal.Result as n {
+                count = count + n;
+            }
+        }
+        return count;
+    }
+end
+
+define actor Transform<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n * 2;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+
+define actor Sink<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 3;
+                self.backward(Signal.Result(value));
+            }
+            on Signal.Result as n {
+                value = n;
+            }
+        }
+        return value;
+    }
+end
+
+pub fnc main(): int {
+    const source = spawn Source();
+    source pipe spawn Transform() pipe spawn Sink();
+    source.send(Signal.Data(5));
+    expect_pipeline(source, 19);
+    stop source;
+    return 43;
+}

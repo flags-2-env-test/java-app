@@ -1,0 +1,28 @@
+declare type match Signals as bool end
+define actor Worker<messages=Signals> as
+    state { total: int = 0; }
+    receive(Signals m) with state.read, state.write {
+        match m {
+            true => {
+                const next = self.handle_state(critical |state| -> {
+                    state.total = state.total + 1;
+                    return state.total;
+                });
+            }
+            false => {
+                const next = using state.write(critical |state| -> {
+                    state.total = state.total + 2;
+                    return state.total;
+                });
+            }
+        }
+        return next;
+    }
+end
+pub fnc main(): int {
+    const worker = spawn Worker();
+    worker.send(true);
+    worker.send(false);
+    stop worker;
+    return 43;
+}

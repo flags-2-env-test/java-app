@@ -1,0 +1,3 @@
+define actor Foo<messages=Nonexistent> as
+    receive(Nonexistent m) { }
+end

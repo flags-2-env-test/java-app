@@ -1,0 +1,4 @@
+declare type match Shapes as bool end
+define actor Foo<messages=Shapes> as
+    pub fnc read(): int { return 42; }
+end

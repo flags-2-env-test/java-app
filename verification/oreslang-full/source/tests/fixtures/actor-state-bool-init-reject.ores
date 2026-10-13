@@ -1,0 +1,8 @@
+// A fixed state key declared int must reject boolean initialization.
+define actor Counter as
+    state { value: int = true; }
+    pub fnc current(): int with state.read {
+        const answer = self.handle_state(|state| -> { return state.value; });
+        return answer;
+    }
+end

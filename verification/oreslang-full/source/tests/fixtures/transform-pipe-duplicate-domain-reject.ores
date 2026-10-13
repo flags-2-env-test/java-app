@@ -1,0 +1,26 @@
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeForwardMessages as
+    Signal.Data
+end
+define match pattern PipeBackwardMessages as
+    Signal.Result
+end
+define transform pipe actor Stage<forward_messages=PipeForwardMessages,forward_messages=PipeBackwardMessages> as
+    state { value: int = 0; }
+    receive_forward(PipeForwardMessages m): void {
+        do match m over {
+            on Signal.Data as n { const next = self.handle_state(critical |state| -> { state.value = n + 1; return state.value; }); }
+        }
+        return;
+    }
+    receive_backward(PipeBackwardMessages m): void {
+        do match m over {
+            on Signal.Result as n { const next = self.handle_state(critical |state| -> { state.value = n + 1; return state.value; }); }
+        }
+        return;
+    }
+end
+pub fnc main(): int { return 43; }

@@ -1,0 +1,48 @@
+name: LLVM compiler and native execution
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  llvm-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM toolchain and native linker
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake clang llvm-dev python3
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+      - name: Compile
+        run: cmake --build build --parallel 2
+      - name: Verify parser, IR and native execution
+        run: ctest --test-dir build --output-on-failure
+      - name: Repeat actor stress and cancellation races
+        run: ctest --test-dir build -R hungry_carrier_async_bounded_cancel --repeat until-fail:12 --output-on-failure
+      - name: ASan and UBSan native actor memory and concurrency smoke
+        run: |
+          clang++ -std=c++17 -O1 -g -pthread -fno-omit-frame-pointer \
+            -fsanitize=address,undefined \
+            -I src/main/cpp \
+            tests/hungry_carrier_test.cpp \
+            src/main/cpp/oreslang/runtime/HungryCarrier.cpp \
+            src/main/cpp/oreslang/runtime/ParkingSignal.cpp \
+            -o build/hungry-carrier-sanitized
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
+          UBSAN_OPTIONS=halt_on_error=1 \
+            ./build/hungry-carrier-sanitized
+
+      - name: ThreadSanitizer actor data-race stress
+        run: |
+          g++ -std=c++17 -O1 -g -pthread -fno-omit-frame-pointer \
+            -fPIE -pie -fsanitize=thread \
+            -I src/main/cpp \
+            tests/hungry_carrier_test.cpp \
+            src/main/cpp/oreslang/runtime/HungryCarrier.cpp \
+            src/main/cpp/oreslang/runtime/ParkingSignal.cpp \
+            -o build/hungry-carrier-tsan
+          TSAN_OPTIONS=halt_on_error=1:second_deadlock_stack=1 \
+            ./build/hungry-carrier-tsan

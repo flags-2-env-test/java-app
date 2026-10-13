@@ -1,0 +1,17 @@
+declare type match Numbers as
+    int
+end
+define actor Worker<messages=Numbers> as
+    let total: int = 0;
+    receive(Numbers m) {
+        total = total + 1;
+        return total;
+    }
+end
+pub fnc main(): int {
+    const worker = spawn Worker();
+    worker.send(12);
+    worker.send(9);
+    stop worker;
+    return 43;
+}

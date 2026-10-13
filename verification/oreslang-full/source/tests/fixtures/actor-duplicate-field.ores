@@ -1,0 +1,6 @@
+// Legacy actor duplicate-field regression migrated to fixed-key state.
+// Reject the duplicate *state key*, not the unrelated legacy-field syntax.
+define actor Counter as {
+  state { base: int = 1; base: int = 2; }
+  pub fnc read(): int { return 0; }
+}

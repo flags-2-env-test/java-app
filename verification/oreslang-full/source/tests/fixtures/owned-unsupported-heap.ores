@@ -1,0 +1,4 @@
+pub fnc main(): int {
+  const item: int = new Node();
+  return item;
+}

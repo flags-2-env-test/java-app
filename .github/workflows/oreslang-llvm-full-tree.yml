@@ -1,0 +1,51 @@
+name: Oreslang LLVM full-tree Debug and Release (exact Git tree)
+on:
+  push:
+    branches: [ci/oreslang-llvm-legacy-20261012]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-tree:
+    name: LLVM full CTest ${{ matrix.build_type }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    env:
+      SOURCE_DIR: verification/oreslang-full/source
+      SOURCE_TREE: 83495708b11c6b54a88ca50596be9b3dd6a97de1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prove exact 366-blob PR source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse "HEAD:${SOURCE_DIR}")"
+          if [[ "$actual" != "$SOURCE_TREE" ]]; then
+            echo "::error::LLVM source tree mismatch: $actual != $SOURCE_TREE"
+            exit 1
+          fi
+          test "$(git ls-tree -r --name-only "$actual" | wc -l)" -eq 366
+          echo "EXACT_SOURCE_TREE_VERIFIED: $actual (366 blobs)"
+      - name: Install actual repository LLVM CMake dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake clang llvm-dev python3
+      - name: Configure unmodified full source tree
+        run: cmake -S "$SOURCE_DIR" -B "build-llvm-full-${{ matrix.build_type }}" -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" -DBUILD_TESTING=ON
+      - name: Build all native CMake targets
+        run: cmake --build "build-llvm-full-${{ matrix.build_type }}" --parallel 2
+      - name: Execute every registered CTest, no exclusions
+        run: |
+          ctest --test-dir "build-llvm-full-${{ matrix.build_type }}" --output-on-failure --output-junit "ctest-${{ matrix.build_type }}.xml" --no-tests=error -j 2
+      - name: Preserve complete test failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oreslang-llvm-full-${{ matrix.build_type }}-results
+          path: |
+            build-llvm-full-${{ matrix.build_type }}/ctest-${{ matrix.build_type }}.xml
+            build-llvm-full-${{ matrix.build_type }}/Testing/Temporary/LastTest.log
+            build-llvm-full-${{ matrix.build_type }}/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: ignore

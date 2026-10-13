@@ -1,0 +1,7 @@
+define actor Worker as
+    state { total: int = 0; }
+    pub fnc tick(): int {
+        total = 1;
+        return 0;
+    }
+end

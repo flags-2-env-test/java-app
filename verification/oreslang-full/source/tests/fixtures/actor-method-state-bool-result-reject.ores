@@ -1,0 +1,8 @@
+// Scalar callback results cannot smuggle bool into an int method.
+define actor Counter as
+ state { value: int = 0; }
+ pub fnc current(): int with state.read {
+  const result = using state.read(|state| -> { return false; });
+  return result;
+ }
+end

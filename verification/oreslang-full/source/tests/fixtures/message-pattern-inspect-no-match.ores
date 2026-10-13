@@ -1,0 +1,4 @@
+declare type match Signals as bool end
+define actor Foo<messages=Signals> as
+    receive(Signals m) { return m; }
+end

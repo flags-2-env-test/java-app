@@ -1,0 +1,8 @@
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end

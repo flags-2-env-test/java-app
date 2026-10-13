@@ -1,0 +1,8 @@
+// Ordinary lexical parameter and actor state key have separate namespaces.
+define actor Counter as {
+ state { base: int = 12; }
+ pub fnc read(int base): int with state.read {
+  const result = self.handle_state(|state| -> { return state.base; });
+  return result + base;
+ }
+}

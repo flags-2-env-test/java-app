@@ -1,0 +1,32 @@
+// Fifteen compiled Oreslang actors; fourteen forward/backward hops.
+// Each downstream actor adds one; backward stages add one; expected 30.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end
+define match pattern PipeForwardMessages as
+    Signal.Data
+end
+define match pattern PipeBackwardMessages as
+    Signal.Result
+end
+
+define actor Stage0<messages=PipeMessages> as
+    state { value: int = 0; }
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                const next = self.handle_state(critical |state| -> { state.missing = n + 1; return state.missing; });
+                self.forward(Signal.Data(next));
+            }
+            on Signal.Result as n {
+                const next = self.handle_state(critical |state| -> { state.value = n + 1; return state.value; });
+            }
+        }
+        return next;
+    }
+end

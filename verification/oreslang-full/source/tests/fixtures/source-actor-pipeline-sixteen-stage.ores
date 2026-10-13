@@ -1,0 +1,304 @@
+// Maximum admitted linear route: 16 distinct compiled Oreslang actors.
+// Each downstream actor adds one; backward stages add one; expected 32.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end
+
+define actor Stage0<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+            }
+        }
+        return value;
+    }
+end
+define actor Stage1<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage2<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage3<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage4<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage5<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage6<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage7<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage8<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage9<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage10<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage11<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage12<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage13<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage14<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Stage15<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+            on Signal.Result as n {
+                value = n + 1;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+pub fnc main(): int {
+    const r0 = spawn Stage0();
+    const r1 = spawn Stage1();
+    const r2 = spawn Stage2();
+    const r3 = spawn Stage3();
+    const r4 = spawn Stage4();
+    const r5 = spawn Stage5();
+    const r6 = spawn Stage6();
+    const r7 = spawn Stage7();
+    const r8 = spawn Stage8();
+    const r9 = spawn Stage9();
+    const r10 = spawn Stage10();
+    const r11 = spawn Stage11();
+    const r12 = spawn Stage12();
+    const r13 = spawn Stage13();
+    const r14 = spawn Stage14();
+    const r15 = spawn Stage15();
+    pipeline(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15);
+    r0.send(Signal.Data(1));
+    expect_pipeline(r0, 32);
+    stop r15;
+    stop r14;
+    stop r13;
+    stop r12;
+    stop r11;
+    stop r10;
+    stop r9;
+    stop r8;
+    stop r7;
+    stop r6;
+    stop r5;
+    stop r4;
+    stop r3;
+    stop r2;
+    stop r1;
+    stop r0;
+    return 43;
+}

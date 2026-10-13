@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ores-truffle-oreslang.github.io/contracts/v2/pipeline-flow-context.schema.json",
+  "title": "Host-owned pipeline flow routing metadata v1",
+  "description": "Diagnostic serialization only. The scheduler owns and authenticates this context outside the MessagePack v2 guest payload. JSON strings preserve unsigned 64-bit identity precision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pipelineId",
+    "routeGeneration",
+    "flowId",
+    "correlationId",
+    "messageId",
+    "parentMessageId",
+    "stageIndex",
+    "direction",
+    "sender",
+    "destination"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pipelineId": {
+      "$ref": "#/$defs/identity"
+    },
+    "routeGeneration": {
+      "$ref": "#/$defs/identity"
+    },
+    "flowId": {
+      "$ref": "#/$defs/identity"
+    },
+    "correlationId": {
+      "$ref": "#/$defs/identity"
+    },
+    "messageId": {
+      "$ref": "#/$defs/identity"
+    },
+    "parentMessageId": {
+      "$ref": "#/$defs/maybeZero"
+    },
+    "stageIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
+    },
+    "direction": {
+      "enum": [
+        "root",
+        "forward",
+        "backward"
+      ]
+    },
+    "sender": {
+      "$ref": "#/$defs/actor"
+    },
+    "destination": {
+      "$ref": "#/$defs/actor"
+    }
+  },
+  "$defs": {
+    "identity": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$",
+      "maxLength": 20
+    },
+    "maybeZero": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "maxLength": 20
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actorId",
+        "actorGeneration",
+        "schedulerDomain"
+      ],
+      "properties": {
+        "actorId": {
+          "$ref": "#/$defs/maybeZero"
+        },
+        "actorGeneration": {
+          "$ref": "#/$defs/maybeZero"
+        },
+        "schedulerDomain": {
+          "$ref": "#/$defs/maybeZero"
+        }
+      }
+    }
+  }
+}

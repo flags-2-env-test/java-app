@@ -1,0 +1,16 @@
+define enum Update as Set: int = 1 end
+define match pattern Updates as Update.Set end
+define actor Recorder<messages=Updates> as
+ state { value: int = 0; }
+ receive(Updates m) with state.write {
+  do match m over {
+   on Update.Set as n {
+    const next = self.handle_state(critical |state| -> {
+     state.value = true;
+     return n;
+    });
+   }
+  }
+  return next;
+ }
+end

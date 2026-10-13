@@ -1,0 +1,4 @@
+pub fnc main(): int {
+  const ready: Future<int> = 42;
+  return 42;
+}

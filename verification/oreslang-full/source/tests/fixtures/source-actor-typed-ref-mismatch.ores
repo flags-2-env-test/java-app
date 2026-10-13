@@ -1,0 +1,13 @@
+define actor Worker as {
+  const base: int = 42;
+  pub fnc read(): int { return base; }
+}
+define actor Other as {
+  const base: int = 42;
+  pub fnc read(): int { return base; }
+}
+pub fnc main(): int {
+  const worker: ActorRef<Other> = spawn Worker();
+  stop worker;
+  return 42;
+}

@@ -1,0 +1,7 @@
+declare type match Patterns as
+    bool
+    bool
+end
+define actor Foo<messages=Patterns> as
+    receive(Patterns m) { }
+end

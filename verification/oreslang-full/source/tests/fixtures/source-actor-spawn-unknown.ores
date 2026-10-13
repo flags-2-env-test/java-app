@@ -1,0 +1,5 @@
+pub fnc main(): int {
+  const worker = spawn MissingActor();
+  stop worker;
+  return 42;
+}

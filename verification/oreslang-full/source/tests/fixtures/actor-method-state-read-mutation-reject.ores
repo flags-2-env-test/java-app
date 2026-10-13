@@ -1,0 +1,10 @@
+define actor Counter as
+    state { value: int = 1; }
+    pub fnc mutate(): int with state.read {
+        const result = self.handle_state(|state| -> {
+            state.value = 42;
+            return state.value;
+        });
+        return result;
+    }
+end

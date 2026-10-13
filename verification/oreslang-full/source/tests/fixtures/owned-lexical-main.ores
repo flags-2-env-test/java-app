@@ -1,0 +1,6 @@
+// GC-free scalar storage: deterministic stack lifetime.
+pub fnc main(): int {
+  const base: int = 6;
+  val scaled: int = base * 7;
+  return scaled;
+}

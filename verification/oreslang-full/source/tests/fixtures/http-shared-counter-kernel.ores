@@ -1,0 +1,8 @@
+// Exact shared Oreslang source between JVM/Graal and LLVM backends.
+// Pure request kernel only; HTTP listeners and actor scheduling remain hosts.
+fnc counter_value(int count): int {
+  return count * 43;
+}
+pub fnc main(): int {
+  return counter_value(1);
+}

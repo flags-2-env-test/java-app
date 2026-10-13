@@ -1,0 +1,45 @@
+// Two-actor minimum: 5 downstream, 19 backward, 24 total.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end
+define actor Source<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = value + n;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n { value = value + n; }
+        }
+        return value;
+    }
+end
+define actor Sink<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 14;
+                self.backward(Signal.Result(value));
+            }
+            on Signal.Result as n { value = n; }
+        }
+        return value;
+    }
+end
+pub fnc main(): int {
+    const source = spawn Source();
+    const sink = spawn Sink();
+    pipeline(source, sink);
+    source.send(Signal.Data(5));
+    expect_pipeline(source, 99);
+    stop sink;
+    stop source;
+    return 43;
+}

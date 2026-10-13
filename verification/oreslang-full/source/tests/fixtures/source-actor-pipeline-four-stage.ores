@@ -1,0 +1,82 @@
+// Real four-actor compiled Oreslang pipeline. Typed result: 29.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end
+
+define actor Source<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = value + n;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n { value = value + n; }
+        }
+        return value;
+    }
+end
+define actor TransformA<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n * 2;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 5;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor TransformB<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 4;
+                self.forward(Signal.Data(value));
+            }
+            on Signal.Result as n {
+                value = n + 2;
+                self.backward(Signal.Result(value));
+            }
+        }
+        return value;
+    }
+end
+define actor Sink<messages=PipeMessages> as
+    let value: int = 0;
+    receive(PipeMessages m) {
+        do match m over {
+            on Signal.Data as n {
+                value = n + 3;
+                self.backward(Signal.Result(value));
+            }
+            on Signal.Result as n { value = n; }
+        }
+        return value;
+    }
+end
+pub fnc main(): int {
+    const source = spawn Source();
+    const first = spawn TransformA();
+    const second = spawn TransformB();
+    const sink = spawn Sink();
+    pipeline(source, first, second, sink);
+    source.send(Signal.Data(5));
+    expect_pipeline(source, 29);
+    stop sink;
+    stop second;
+    stop first;
+    stop source;
+    return 43;
+}

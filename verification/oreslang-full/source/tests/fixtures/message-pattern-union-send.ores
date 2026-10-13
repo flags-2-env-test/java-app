@@ -1,0 +1,15 @@
+declare type match Patterns as
+    (bool, string)
+    string
+    FixedArray[string, string, string]
+    List[bool]
+end
+define actor Foo<messages=Patterns> as
+    receive(Patterns m) { }
+end
+pub fnc main(): int {
+    const worker = spawn Foo();
+    worker.send(true);
+    stop worker;
+    return 43;
+}

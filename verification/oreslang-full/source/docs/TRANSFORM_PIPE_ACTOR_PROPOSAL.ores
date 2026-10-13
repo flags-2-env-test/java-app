@@ -1,0 +1,48 @@
+// DESIGN PROPOSAL: role/domain syntax and directional hook lowering are not yet
+// admitted together by the executable Java or LLVM pipeline frontend.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+
+define match pattern PipeForwardMessages as
+    Signal.Data
+end
+
+define match pattern PipeBackwardMessages as
+    Signal.Result
+end
+
+define transform pipe actor Stage1<
+    forward_messages=PipeForwardMessages,
+    backward_messages=PipeBackwardMessages
+> as
+    state { value: int = 0; }
+
+    update_from(int incoming): int {
+        return self.handle_state(critical |state| -> {
+            state.value = incoming + 1;
+            return state.value;
+        });
+    }
+
+    receive_forward(PipeForwardMessages m): void {
+        do match m over {
+            on Signal.Data as n {
+                const output = self.update_from(n);
+                await self.forward(Signal.Data(output));
+            }
+        }
+        return;
+    }
+
+    receive_backward(PipeBackwardMessages m): void {
+        do match m over {
+            on Signal.Result as n {
+                const output = self.update_from(n);
+                await self.backward(Signal.Result(output));
+            }
+        }
+        return;
+    }
+end

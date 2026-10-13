@@ -1,0 +1,18 @@
+{
+  "format": "MessagePack",
+  "wire_version": 2,
+  "shape_hash_domain": "oreslang.actor.shape.v2/",
+  "vector": {
+    "schema_id": "demo.Float64.v1",
+    "shape_descriptor": "F",
+    "kind": "float64",
+    "value": 1.5,
+    "hex": "9402af64656d6f2e466c6f617436342e7631c42085e27ecf506d7dfa7e3db8c1449d9f3cdf7639765689c429f693b6cbf5d68f91cb3ff8000000000000",
+    "negative": [
+      "payload_NaN",
+      "payload_Infinity",
+      "wrong_shape_sha256",
+      "noncanonical_encoded_integer"
+    ]
+  }
+}

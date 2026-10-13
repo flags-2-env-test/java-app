@@ -1,0 +1,34 @@
+// Five independent native actor heaps and mailboxes, two messages each.
+define actor Worker as {
+    state { total: int = 0; }
+    pub fnc on_message(int n): int with state.read, state.write {
+        const next = self.handle_state(critical |state| -> {
+            state.total = state.total + n;
+            return state.total;
+        });
+        return next;
+    }
+}
+pub fnc main(): int {
+    const a = spawn Worker();
+    const b = spawn Worker();
+    const c = spawn Worker();
+    const d = spawn Worker();
+    const e = spawn Worker();
+    a.send(1);
+    b.send(1);
+    c.send(1);
+    d.send(1);
+    e.send(1);
+    a.send(2);
+    b.send(2);
+    c.send(2);
+    d.send(2);
+    e.send(2);
+    stop a;
+    stop b;
+    stop c;
+    stop d;
+    stop e;
+    return 43;
+}

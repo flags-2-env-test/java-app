@@ -1,0 +1,6 @@
+// The actor state-map parser must reject unsupported native state types.
+// This is not a rejection of obsolete ordinary actor instance-field syntax.
+define actor Counter as {
+  state { item: owned Widget = new Widget(); }
+  pub fnc read(): int { return 1; }
+}
