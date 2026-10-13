@@ -1,0 +1,50 @@
+// Signed-i64 compiler guest conformance: the nominal schema for Add and
+// Sub stays identical to Java while the payload's *canonical* MessagePack
+// integer width varies across fixint, int8/16/32/64 and uint32/64.
+// Neither structural type narrowing nor actor turn ownership may change.
+define enum Numbers as
+    Add: int = 1
+    Sub: int = 2
+end
+
+define match pattern NumberMail as
+    Numbers.Sub
+    Numbers.Add
+end
+
+define actor Accumulator<messages=NumberMail> as
+    state { total: int = 0; }
+
+    receive(NumberMail m) with state.read, state.write {
+        do match m over {
+            on Numbers.Add as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.total = state.total + n;
+                    return state.total;
+                });
+            }
+            on Numbers.Sub as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.total = state.total - n;
+                    return state.total;
+                });
+            }
+        }
+        return next;
+    }
+end
+
+pub fnc main(): int {
+    const counter = spawn Accumulator();
+    counter.send(Numbers.Add(-1));
+    counter.send(Numbers.Add(-33));
+    counter.send(Numbers.Sub(-129));
+    counter.send(Numbers.Add(-32769));
+    counter.send(Numbers.Add(2147483648));
+    counter.send(Numbers.Sub(4294967296));
+    counter.send(Numbers.Add(-2147483649));
+    counter.send(Numbers.Add(9223372036854775807));
+    counter.send(Numbers.Add(-9223372036854775808));
+    stop counter;
+    return 43;
+}

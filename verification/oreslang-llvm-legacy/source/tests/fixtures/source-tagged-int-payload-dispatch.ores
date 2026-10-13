@@ -1,0 +1,52 @@
+// Executable typed MessagePack v2: two nominal variants share shape
+// T[S,I,I], but the actor dispatches on their declared enum identity.
+// The source compiler serializes each literal using the pinned schema and
+// the receiver narrows the bound integer in the correct arm.
+define enum Signals as
+    Ping = 1
+    Add: int = 2
+    Sub: int = 3
+end
+
+define match pattern WorkerMessages as
+    Signals.Sub
+    Signals.Ping
+    Signals.Add
+end
+
+define actor Worker<messages=WorkerMessages> as
+    state { count: int = 0; }
+
+    receive(WorkerMessages m) with state.read, state.write {
+        do match m over {
+            on Signals.Ping {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + 8;
+                    return state.count;
+                });
+            }
+            on Signals.Add as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + n;
+                    return state.count;
+                });
+            }
+            on Signals.Sub as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count - n;
+                    return state.count;
+                });
+            }
+        }
+        return next;
+    }
+end
+
+pub fnc main(): int {
+    const worker = spawn Worker();
+    worker.send(Signals.Add(19));
+    worker.send(Signals.Sub(4));
+    worker.send(Signals.Ping);
+    stop worker;
+    return 43;
+}

@@ -1,0 +1,51 @@
+// First executable LLVM subset: valueless nominal enum messages only.
+define enum Signals as
+    Ping = 1
+    Pong = 255
+    Stop = 65536
+end
+
+// Reordered domains MUST have the same domain fingerprint but keep
+// callback ordinals tied to this source order.
+define match pattern WorkerMessages as
+    Signals.Pong
+    Signals.Ping
+    Signals.Stop
+end
+
+define actor Worker<messages=WorkerMessages> as
+    state { count: int = 0; }
+
+    receive(WorkerMessages m) with state.read, state.write {
+        do match m over {
+            on Signals.Ping {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + 4;
+                    return state.count;
+                });
+            }
+            on Signals.Pong {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + 2;
+                    return state.count;
+                });
+            }
+            on Signals.Stop {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + 8;
+                    return state.count;
+                });
+            }
+        }
+        return next;
+    }
+end
+
+pub fnc main(): int {
+    const worker = spawn Worker();
+    worker.send(Signals.Pong);
+    worker.send(Signals.Ping);
+    worker.send(Signals.Stop);
+    stop worker;
+    return 43;
+}

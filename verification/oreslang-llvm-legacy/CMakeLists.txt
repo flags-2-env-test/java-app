@@ -161,3 +161,23 @@ add_test(NAME historical_three_actor_asan_ubsan
  --stderr "SOURCE_PIPELINE_ROUNDTRIP_PASS actors=3 typed=1 forward=2 backward=2 result=19"
  --pipeline-three-actor-summary --pipeline-context-summary)
 set_tests_properties(historical_three_actor_asan_ubsan PROPERTIES TIMEOUT 120)
+
+guest_runtime(historical_nominal_payloadless_guest source-tagged-payloadless-dispatch.ores
+ --stderr "processed=3 last=14")
+guest_runtime(historical_nominal_int_payload_guest source-tagged-int-payload-dispatch.ores
+ --stderr "processed=3 last=23")
+guest_runtime(historical_signed_i64_messagepack_guest source-tagged-int64-canonical-boundaries.ores
+ --stderr "processed=9 last=-4294999972")
+function(sanitized_tagged name fixture expected)
+ add_test(NAME ${name} COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/${fixture}
+ --run 43 --clang ${ORE_CLANG} --runs 2 --sanitize
+ --actor-runtime ${RUNTIME}/ActorOwnedI64Heap.c
+ --scheduler-runtime ${RUNTIME}/NativeActorScheduler.c
+ --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c
+ --stderr "${expected}")
+ set_tests_properties(${name} PROPERTIES TIMEOUT 120)
+endfunction()
+sanitized_tagged(historical_nominal_payloadless_asan source-tagged-payloadless-dispatch.ores "processed=3 last=14")
+sanitized_tagged(historical_nominal_int_payload_asan source-tagged-int-payload-dispatch.ores "processed=3 last=23")
+sanitized_tagged(historical_signed_i64_asan source-tagged-int64-canonical-boundaries.ores "processed=9 last=-4294999972")

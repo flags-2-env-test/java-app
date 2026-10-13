@@ -38,6 +38,9 @@ eea478a5448408b7eed4e99362cda4ce77a378d2  source/tests/fixtures/actor-unsupporte
 7c57e51cc2b8cce1f3b112ddd0e58f2e699b6724  source/tests/fixtures/source-actor-pipeline-bidirectional.ores
 d7c1a902986c6e3a1fcf44cff58babb1e8083a2e  source/tests/fixtures/source-actor-send.ores
 2e0fa4c8b22a68b655d3ede307f0798f2465d07b  source/tests/fixtures/source-actor-spawn-stop.ores
+415c47ef9555ad1b9e29322d968fef73a830f297  source/tests/fixtures/source-tagged-int-payload-dispatch.ores
+89094273cb283f1024fd32315c738eb8fb8c8dc3  source/tests/fixtures/source-tagged-int64-canonical-boundaries.ores
+03844b4fb19c9e844930e79d23de5e6be2677516  source/tests/fixtures/source-tagged-payloadless-dispatch.ores
 9230b6588019f38288e61833b577d924be3cc73a  source/tests/fixtures/unsupported-actor.ores
 3a7e5c63a2d8842ced3b158aeccb1482e55b09f0  source/tests/native_actor_method_state_harness.c
 cb2ae5d062d1f9a2e9bbe138b9371c8079af1c8e  source/tests/native_actor_owned_state_harness.c
