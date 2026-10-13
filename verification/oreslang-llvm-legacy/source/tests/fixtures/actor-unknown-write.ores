@@ -1,0 +1,11 @@
+// An unknown key must be rejected within an otherwise valid write loan.
+define actor Counter as {
+ state { value: int = 40; }
+ pub fnc bad(): int with state.read, state.write {
+  const result = self.handle_state(critical |state| -> {
+   state.ghost = 41;
+   return state.value;
+  });
+  return result;
+ }
+}

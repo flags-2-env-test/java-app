@@ -1,0 +1,23 @@
+// Historical multi-key actor behavior, canonical scoped state access.
+define actor Counter as {
+ state { base: int = 40; delta: int = 2; total: int = 0; }
+ pub fnc read(): int with state.read {
+  const result = self.handle_state(|state| -> { return state.base + state.delta; });
+  return result;
+ }
+ pub fnc add(int n): int with state.read, state.write {
+  const result = self.handle_state(critical |state| -> {
+   state.total = state.total + state.base + state.delta + n;
+   return state.total;
+  });
+  return result;
+ }
+ pub fnc total_value(): int with state.read {
+  const result = using state.read(|state| -> { return state.total; });
+  return result;
+ }
+ pub fnc plus(int n): int with state.read {
+  const local = self.handle_state(|state| -> { return state.base + state.delta; });
+  return local + n;
+ }
+}

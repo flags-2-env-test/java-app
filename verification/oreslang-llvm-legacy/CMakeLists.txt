@@ -95,3 +95,36 @@ add_test(NAME sanitizer_actor_method_state_native_heap
  --native-harness ${CMAKE_CURRENT_SOURCE_DIR}/source/tests/native_actor_method_state_harness.c
  --actor-runtime ${CMAKE_CURRENT_SOURCE_DIR}/source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c)
 set_tests_properties(compiled_actor_method_state_native_heap sanitizer_actor_method_state_native_heap PROPERTIES TIMEOUT 100)
+
+add_test(NAME historical_multikey_actor_codegen
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-owned-fields.ores
+ --ir "oreslang_actor_Counter_total_value")
+add_test(NAME historical_multikey_actor_execution
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-owned-fields.ores
+ --run 43 --clang ${ORE_CLANG} --runs 3
+ --native-harness ${CMAKE_CURRENT_SOURCE_DIR}/source/tests/native_actor_owned_state_harness.c
+ --actor-runtime ${CMAKE_CURRENT_SOURCE_DIR}/source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c)
+add_test(NAME historical_multikey_actor_asan_ubsan
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-owned-fields.ores
+ --run 43 --clang ${ORE_CLANG} --runs 3 --sanitize
+ --native-harness ${CMAKE_CURRENT_SOURCE_DIR}/source/tests/native_actor_owned_state_harness.c
+ --actor-runtime ${CMAKE_CURRENT_SOURCE_DIR}/source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c)
+add_test(NAME historical_immutable_read_grant_reject
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-immutable-write.ores
+ --diagnostic "read-only actor state loan cannot mutate state"
+ --diagnostic-not "actor instance data must be declared in one state map")
+add_test(NAME historical_unknown_write_reject
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-unknown-write.ores
+ --diagnostic "state callback writes unknown or immutable key"
+ --diagnostic-not "actor instance data must be declared in one state map")
+add_test(NAME historical_lexical_state_shadow_accept
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-field-shadow.ores
+ --ir "oreslang_actor_Counter_read")
+set_tests_properties(historical_multikey_actor_execution historical_multikey_actor_asan_ubsan PROPERTIES TIMEOUT 100)

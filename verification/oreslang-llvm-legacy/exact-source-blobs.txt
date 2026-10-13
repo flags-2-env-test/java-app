@@ -9,6 +9,8 @@ f5d02c7398be64f5fc8a4a06c1fe42e55dd55a27  source/tests/contract.py
 627317a58f4d0f5de946b8b729c7b5015ad6cbf7  source/tests/fixtures/actor-abi-actor-collision.ores
 9682246d8fb2c9e770c6c613f39173ade053e036  source/tests/fixtures/actor-abi-func-collision.ores
 7542570a10c62de330e7c975783c3d8142faf6ef  source/tests/fixtures/actor-duplicate-field.ores
+eaf0df8b006b92db43c9b2a65dfb7e161de8bdbf  source/tests/fixtures/actor-field-shadow.ores
+5f252ddd5c7353dad1d3fe709eb94c011568f35a  source/tests/fixtures/actor-immutable-write.ores
 e9faa7a58f18b3cccd7a87db57e030dbd804a3bd  source/tests/fixtures/actor-method-only-positive.ores
 87c8e1a23d4cb30aecc479952036c19f95d7d062  source/tests/fixtures/actor-method-state-escape-reject.ores
 2d1cffc1aba7574313b9dc30c4919b5e3ecbd6f3  source/tests/fixtures/actor-method-state-no-effects-reject.ores
@@ -19,8 +21,11 @@ a821f41af73026fc480dde8201fb80cfb8fbbdfa  source/tests/fixtures/actor-method-sta
 aadd78caaf1a59874f4c391fa508ad305e801e0d  source/tests/fixtures/actor-method-state-underdeclared-reject.ores
 af65a81169e5fe096fd9d877c0a0d6e0e932c390  source/tests/fixtures/actor-method-state-write-only.ores
 fac19869b9b83174947d4caa2ba6ce9532064a7b  source/tests/fixtures/actor-method-state-write.ores
+5916ed42fb46cf0e9b140b5d249bc84826829b5a  source/tests/fixtures/actor-owned-fields.ores
 75d8cace616d61f4887590ebe3259e6c2192d3c1  source/tests/fixtures/actor-raw-field-reject.ores
 8c3b59f6e820166795004d24bcb1cef1057a40f0  source/tests/fixtures/actor-unknown-field.ores
+40316ffefdf38f5a856eb63f46ea5a11a9c167f1  source/tests/fixtures/actor-unknown-write.ores
 eea478a5448408b7eed4e99362cda4ce77a378d2  source/tests/fixtures/actor-unsupported-field.ores
 9230b6588019f38288e61833b577d924be3cc73a  source/tests/fixtures/unsupported-actor.ores
 3a7e5c63a2d8842ced3b158aeccb1482e55b09f0  source/tests/native_actor_method_state_harness.c
+cb2ae5d062d1f9a2e9bbe138b9371c8079af1c8e  source/tests/native_actor_owned_state_harness.c
