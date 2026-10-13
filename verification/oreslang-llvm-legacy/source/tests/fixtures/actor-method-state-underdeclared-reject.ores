@@ -1,0 +1,10 @@
+define actor Counter as
+    state { value: int = 1; }
+    pub fnc increment(): int with state.write {
+        const answer = self.handle_state(critical |state| -> {
+            state.value = state.value + 1;
+            return state.value;
+        });
+        return answer;
+    }
+end

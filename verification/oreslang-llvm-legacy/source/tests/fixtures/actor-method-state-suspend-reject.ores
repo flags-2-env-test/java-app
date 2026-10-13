@@ -1,0 +1,10 @@
+define actor Counter as
+    state { value: int = 1; }
+    pub fnc current(): int with state.read {
+        const answer = using state.read(|state| -> {
+            await worker.get_ready();
+            return state.value;
+        });
+        return answer;
+    }
+end

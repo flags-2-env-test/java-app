@@ -830,6 +830,41 @@ std::string emit_verified_llvm_ir(const Program& source) {
                     parameters.emplace(name, merged);
                 }
             }
+            if (method.method_state_loan) {
+                // Native actor-state operations are admitted by the scheduler
+                // turn token and compile only inside the sealed callback.
+                // Copy out an i64; neither heap addresses nor state grants
+                // enter the surrounding method namespace.
+                const auto& loan = *method.method_state_loan;
+                auto loanLocals = locals;
+                for (std::size_t i = 0; i < actor.fields.size(); ++i) {
+                    auto* key = builder.CreateAlloca(
+                        i64, nullptr, "state." + actor.fields[i].name);
+                    auto* snapshot = builder.CreateCall(fieldRead,
+                        {heap, currentDomain, currentEpoch,
+                         llvm::ConstantInt::get(i64, i)},
+                        "state.snapshot." + actor.fields[i].name);
+                    builder.CreateStore(snapshot, key);
+                    loanLocals.emplace("@state." + actor.fields[i].name, key);
+                }
+                for (const auto& assignment : loan.assignments) {
+                    const auto it = std::find_if(actor.fields.begin(), actor.fields.end(),
+                        [&](const LocalBinding& f) { return f.name == assignment.field; });
+                    if (it == actor.fields.end() || !it->field_mutable)
+                        throw std::runtime_error("invalid method state loan field");
+                    auto* updated = lower(*assignment.value, builder, i64,
+                        parameters, loanLocals, declarations);
+                    const auto index = std::distance(actor.fields.begin(), it);
+                    builder.CreateCall(fieldWrite,
+                        {heap, currentDomain, currentEpoch,
+                         llvm::ConstantInt::get(i64, index), updated});
+                    builder.CreateStore(updated, loanLocals.at("@state." + assignment.field));
+                }
+                auto* copied = lower(*loan.result, builder, i64,
+                    parameters, loanLocals, declarations);
+                if (!parameters.emplace(loan.result_binding, copied).second)
+                    throw std::runtime_error("state result conflicts with method parameter");
+            }
             if (!method.boolean_arms.empty()) {
                 auto* subject = parameters.at(method.match_subject);
                 auto* condition = builder.CreateICmpNE(

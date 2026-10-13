@@ -428,6 +428,56 @@ private:
         return name;
     }
 
+    std::unique_ptr<StateLoan> parse_scoped_state_loan() {
+        require("const");
+        auto loan = std::make_unique<StateLoan>();
+        loan->result_binding = identifier();
+        require("=");
+        if (accept("using")) {
+            require("state"); require(".");
+            if (accept("read"))
+                loan->mode = StateLoan::Mode::Read;
+            else if (accept("write"))
+                loan->mode = StateLoan::Mode::Write;
+            else fail("using state capability must be read or write");
+            require("(");
+            if (loan->mode == StateLoan::Mode::Write)
+                require("critical");
+            else if (token_.text == "critical")
+                fail("using state.read cannot request a critical write loan");
+        } else {
+            require("self"); require(".");
+            require("handle_state"); require("(");
+            loan->mode = accept("critical")
+                ? StateLoan::Mode::Write
+                : StateLoan::Mode::Read;
+        }
+        require("|"); require("state"); require("|");
+        require("->"); require("{");
+        state_loan_depth_ = 1;
+        while (token_.text == "state") {
+            if (loan->mode == StateLoan::Mode::Read)
+                fail("read-only actor state loan cannot mutate state");
+            FieldAssignment assignment;
+            assignment.offset = token_.offset;
+            require("state"); require(".");
+            assignment.field = identifier();
+            require("=");
+            assignment.value = expression();
+            require(";");
+            loan->assignments.push_back(std::move(assignment));
+        }
+        if (token_.text == "await" || token_.text == "select"
+                || token_.text == "nb" || token_.text == "using")
+            fail("state read/write loan cannot suspend or nest");
+        require("return");
+        loan->result = expression();
+        require(";");
+        state_loan_depth_ = 0;
+        require("}"); require(")"); require(";");
+        return loan;
+    }
+
     Function function(bool actor_method = false,
                       const std::string& message_type = "",
                       const std::string& backward_type = "",
@@ -491,6 +541,13 @@ private:
         require("{");
         bool scalar_local_seen = false;
         while (token_.text == "const" || token_.text == "val") {
+            // A method-level const binding of an actor-owned state callback
+            // is handled as a sealed loan, not an ordinary scalar initializer.
+            if (actor_method && !value.is_receiver && token_.text == "const") {
+                Lexer probe = lexer_;
+                const Token next = probe.next(), separator = probe.next();
+                if (next.kind == Kind::Identifier && separator.text == "=") break;
+            }
             LocalBinding binding;
             binding.offset = token_.offset;
             advance();
@@ -700,54 +757,8 @@ private:
                     // The earlier using state.read/write syntax is retained
                     // only as a restricted equivalent for this migration.
                     // No loan may escape the callback or suspend.
-                    if (accept("const")) {
-                        auto loan = std::make_unique<StateLoan>();
-                        loan->result_binding = identifier();
-                        require("=");
-                        if (accept("using")) {
-                            require("state"); require(".");
-                            if (accept("read"))
-                                loan->mode = StateLoan::Mode::Read;
-                            else if (accept("write"))
-                                loan->mode = StateLoan::Mode::Write;
-                            else fail("using state capability must be read or write");
-                            require("(");
-                            if (loan->mode == StateLoan::Mode::Write)
-                                require("critical");
-                            else if (token_.text == "critical")
-                                fail("using state.read cannot request a critical write loan");
-                        } else {
-                            require("self"); require(".");
-                            require("handle_state"); require("(");
-                            loan->mode = accept("critical")
-                                ? StateLoan::Mode::Write
-                                : StateLoan::Mode::Read;
-                        }
-                        require("|"); require("state"); require("|");
-                        require("->"); require("{");
-                        state_loan_depth_ = 1;
-                        while (token_.text == "state") {
-                            if (loan->mode == StateLoan::Mode::Read)
-                                fail("read-only actor state loan cannot mutate state");
-                            FieldAssignment assignment;
-                            assignment.offset = token_.offset;
-                            require("state"); require(".");
-                            assignment.field = identifier();
-                            require("=");
-                            assignment.value = expression();
-                            require(";");
-                            loan->assignments.push_back(std::move(assignment));
-                        }
-                        if (token_.text == "await" || token_.text == "select"
-                                || token_.text == "nb" || token_.text == "using")
-                            fail("state read/write loan cannot suspend or nest");
-                        require("return");
-                        loan->result = expression();
-                        require(";");
-                        state_loan_depth_ = 0;
-                        require("}"); require(")"); require(";");
-                        arm.state_loan = std::move(loan);
-                    }
+                    if (token_.text == "const")
+                        arm.state_loan = parse_scoped_state_loan();
                     // Legacy direct field mutation is intentionally rejected.
                     if (token_.kind == Kind::Identifier && !reserved(token_.text))
                         fail("actor state mutation requires scoped handle_state callback");
@@ -829,6 +840,8 @@ private:
             require(";");
             value.assignments.push_back(std::move(assignment));
         }
+        if (actor_method && !value.is_receiver && token_.text == "const")
+            value.method_state_loan = parse_scoped_state_loan();
         if (value.is_receiver && (token_.text == "}" || (transform_pipe && token_.text == "return"))) {
             if (accept("return")) require(";");
             value.result = make_expression(Expression::Kind::Integer, token_.offset);
@@ -1678,6 +1691,47 @@ private:
                         throw std::runtime_error("cannot assign immutable or unknown actor field '" + assignment.field + "'");
                     }
                     validate_expression(*assignment.value, available, functions);
+                }
+                if (method.method_state_loan) {
+                    // Ordinary methods require explicit effect bounds; no
+                    // implicit escalation via compiler inference.
+                    const auto& loan = *method.method_state_loan;
+                    if (!actor.state_declared)
+                        throw std::runtime_error("handle_state requires an actor state map");
+                    if (!method.effects_declared)
+                        throw std::runtime_error("actor state method requires explicit with effects");
+                    const auto permits = [&](std::string_view effect) {
+                        return std::find(method.declared_effects.begin(),
+                            method.declared_effects.end(), effect)
+                                != method.declared_effects.end();
+                    };
+                    if (loan.mode == StateLoan::Mode::Read && !permits("state.read"))
+                        throw std::runtime_error("state.read loan not permitted by with effects");
+                    if (loan.mode == StateLoan::Mode::Write && !permits("state.write"))
+                        throw std::runtime_error("state.write loan not permitted by with effects");
+                    bool reads = reads_state_value(*loan.result);
+                    for (const auto& assignment : loan.assignments)
+                        reads |= reads_state_value(*assignment.value);
+                    if (reads && !permits("state.read"))
+                        throw std::runtime_error("state.read operation not permitted by with effects");
+                    if (loan.mode == StateLoan::Mode::Read && !loan.assignments.empty())
+                        throw std::runtime_error("read-only actor state loan cannot mutate state");
+                    auto loanAvailable = available;
+                    for (const auto& field : actor.fields)
+                        loanAvailable.insert("@state." + field.name);
+                    for (const auto& assignment : loan.assignments) {
+                        if (!mutableFields.count(assignment.field))
+                            throw std::runtime_error("state callback writes unknown or immutable key");
+                        if (contains_call(*assignment.value))
+                            throw std::runtime_error("state read/write loan cannot invoke arbitrary functions");
+                        validate_expression(*assignment.value, loanAvailable, functions);
+                    }
+                    if (contains_call(*loan.result))
+                        throw std::runtime_error("state read/write loan cannot invoke arbitrary functions");
+                    validate_expression(*loan.result, loanAvailable, functions);
+                    if (!available.insert(loan.result_binding).second
+                            || fields.count(loan.result_binding))
+                        throw std::runtime_error("state callback result shadows actor state or method local");
                 }
                 // A copied scalar may be returned from a tagged match
                 // only when every arm defines the same callback result.

@@ -44,3 +44,31 @@ add_test(NAME optimized_forbidden_diagnostic_canary
     --diagnostic "actor instance data must be declared in one state map"
     --diagnostic-not "actor instance data must be declared in one state map")
 set_tests_properties(optimized_forbidden_diagnostic_canary PROPERTIES WILL_FAIL TRUE)
+
+# Ordinary actor methods: real compiler lowering of synchronous scoped loans.
+function(method_ir name fixture needle)
+ add_test(NAME ${name} COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+   --compiler $<TARGET_FILE:oreslang-llvmc>
+   --fixture ${FIX}/${fixture}
+   --ir "${needle}")
+endfunction()
+function(method_reject name fixture diagnostic)
+ add_test(NAME ${name} COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+   --compiler $<TARGET_FILE:oreslang-llvmc>
+   --fixture ${FIX}/${fixture}
+   --diagnostic "${diagnostic}")
+endfunction()
+method_ir(method_state_write_codegen actor-method-state-write.ores "oreslang_actor_Counter_increment")
+method_ir(method_state_read_codegen actor-method-state-read.ores "oreslang_actor_Counter_current")
+method_ir(method_state_write_only_codegen actor-method-state-write-only.ores "oreslang_actor_Counter_reset")
+method_reject(method_missing_effects actor-method-state-no-effects-reject.ores "actor state method requires explicit with effects")
+method_reject(method_read_is_immutable actor-method-state-read-mutation-reject.ores "read-only actor state loan cannot mutate state")
+method_reject(method_read_effect_missing actor-method-state-underdeclared-reject.ores "state.read operation not permitted by with effects")
+method_reject(method_cannot_suspend actor-method-state-suspend-reject.ores "state read/write loan cannot suspend or nest")
+method_reject(method_no_loan_escape actor-method-state-escape-reject.ores "actor state reference cannot escape handle_state callback")
+add_test(NAME method_read_IR_no_field_write COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+    --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-method-state-read.ores
+    --ir-not "call .*@ores_actor_i64_heap_field_write")
+add_test(NAME method_write_IR_has_field_write COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+    --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-method-state-write.ores
+    --ir "call void @ores_actor_i64_heap_field_write")

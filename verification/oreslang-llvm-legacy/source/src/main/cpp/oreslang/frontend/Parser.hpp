@@ -114,6 +114,9 @@ struct Function {
     std::string match_subject;
     std::vector<ReceiveBooleanArm> boolean_arms;
     std::vector<TaggedReceiveArm> tagged_arms;
+    // One synchronous, copied-scalar state callback in an ordinary actor method.
+    // No guest-visible loan can survive this lexical region.
+    std::unique_ptr<StateLoan> method_state_loan;
     std::unique_ptr<Expression> result;
     std::size_t offset = 0;
     bool exported = false;
