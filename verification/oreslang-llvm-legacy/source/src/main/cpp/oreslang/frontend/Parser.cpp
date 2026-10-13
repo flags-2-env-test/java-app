@@ -1508,12 +1508,16 @@ private:
                                         throw std::runtime_error("state callback writes unknown or immutable key");
                                     if (reads_name(*assignment.value, parameter))
                                         throw std::runtime_error("match arm Message payload binding is not narrowed");
+                                    if (contains_boolean(*assignment.value))
+                                        throw std::runtime_error("actor state callback requires int expressions");
                                     if (contains_call(*assignment.value))
                                         throw std::runtime_error("state read/write loan cannot invoke arbitrary functions");
                                     validate_expression(*assignment.value, loanAvailable, functions);
                                 }
                                 if (reads_name(*loan.result, parameter))
                                     throw std::runtime_error("match arm Message payload binding is not narrowed");
+                                if (contains_boolean(*loan.result))
+                                    throw std::runtime_error("actor state callback requires int expressions");
                                 if (contains_call(*loan.result))
                                     throw std::runtime_error("state read/write loan cannot invoke arbitrary functions");
                                 validate_expression(*loan.result, loanAvailable, functions);
@@ -1609,11 +1613,15 @@ private:
                                     if (!mutableFields.count(assignment.field))
                                         throw std::runtime_error(
                                             "state callback writes unknown or immutable key");
+                                    if (contains_boolean(*assignment.value))
+                                        throw std::runtime_error("actor state callback requires int expressions");
                                     if (contains_call(*assignment.value))
                                         throw std::runtime_error(
                                             "state read/write loan cannot invoke arbitrary functions");
                                     validate_expression(*assignment.value, loanAvailable, functions);
                                 }
+                                if (contains_boolean(*arm.state_loan->result))
+                                    throw std::runtime_error("actor state callback requires int expressions");
                                 if (contains_call(*arm.state_loan->result))
                                     throw std::runtime_error(
                                         "state read/write loan cannot invoke arbitrary functions");
@@ -1773,10 +1781,14 @@ private:
                     for (const auto& assignment : loan.assignments) {
                         if (!mutableFields.count(assignment.field))
                             throw std::runtime_error("state callback writes unknown or immutable key");
+                        if (contains_boolean(*assignment.value))
+                            throw std::runtime_error("actor state callback requires int expressions");
                         if (contains_call(*assignment.value))
                             throw std::runtime_error("state read/write loan cannot invoke arbitrary functions");
                         validate_expression(*assignment.value, loanAvailable, functions);
                     }
+                    if (contains_boolean(*loan.result))
+                        throw std::runtime_error("actor state callback requires int expressions");
                     if (contains_call(*loan.result))
                         throw std::runtime_error("state read/write loan cannot invoke arbitrary functions");
                     validate_expression(*loan.result, loanAvailable, functions);

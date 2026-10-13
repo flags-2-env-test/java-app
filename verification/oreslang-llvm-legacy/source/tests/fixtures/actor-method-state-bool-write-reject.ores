@@ -1,0 +1,11 @@
+// Fixed state:int does not accept bool-to-int coercion within a loan.
+define actor Counter as
+ state { value: int = 0; }
+ pub fnc reset(): int with state.write {
+  const next = self.handle_state(critical |state| -> {
+   state.value = true;
+   return 1;
+  });
+  return next;
+ }
+end

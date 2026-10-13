@@ -272,3 +272,19 @@ foreach(kind handle using)
   set_tests_properties(native_asan_fifteen_${kind}_${mode}_explicit_effects PROPERTIES TIMEOUT 120)
  endforeach()
 endforeach()
+add_test(NAME reject_actor_method_state_bool_write_reject
+ COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-method-state-bool-write-reject.ores
+ --diagnostic "actor state callback requires int expressions")
+add_test(NAME reject_actor_method_state_bool_result_reject
+ COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-method-state-bool-result-reject.ores
+ --diagnostic "actor state callback requires int expressions")
+add_test(NAME reject_actor_tagged_state_bool_write_reject
+ COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-tagged-state-bool-write-reject.ores
+ --diagnostic "actor state callback requires int expressions")
+add_test(NAME reject_actor_boolean_state_bool_result_reject
+ COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-boolean-state-bool-result-reject.ores
+ --diagnostic "actor state callback requires int expressions")

@@ -1,6 +1,6 @@
 76d595415ec7b0183d48d3c9949a8ac10788eadf  source/src/main/cpp/oreslang/backend/LlvmCodegen.cpp
 44d5336cc7131f21a2990433a584cab5d40e1006  source/src/main/cpp/oreslang/backend/LlvmCodegen.hpp
-2de2d54cbc9baef21dcdac2984b6e0011b3ff561  source/src/main/cpp/oreslang/frontend/Parser.cpp
+f47c0e331b377b1a7c7461060d7cce400a9f3637  source/src/main/cpp/oreslang/frontend/Parser.cpp
 20d4052fe00d876f0e8f84a3e8e8d8700745b204  source/src/main/cpp/oreslang/frontend/Parser.hpp
 8b547a85207c999417b2d97180a3ac9866d4a933  source/src/main/cpp/oreslang/main.cpp
 d7c408f47f0955c99b50ad3381ccff96ec742dc2  source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c
@@ -16,12 +16,15 @@ ea340323300961d98fccc1836e2f283b2d376d4b  source/src/main/cpp/oreslang/runtime/S
 f5d02c7398be64f5fc8a4a06c1fe42e55dd55a27  source/tests/contract.py
 627317a58f4d0f5de946b8b729c7b5015ad6cbf7  source/tests/fixtures/actor-abi-actor-collision.ores
 9682246d8fb2c9e770c6c613f39173ade053e036  source/tests/fixtures/actor-abi-func-collision.ores
+915998384b93efe8065c137519f9cb70308a1597  source/tests/fixtures/actor-boolean-state-bool-result-reject.ores
 7542570a10c62de330e7c975783c3d8142faf6ef  source/tests/fixtures/actor-duplicate-field.ores
 eaf0df8b006b92db43c9b2a65dfb7e161de8bdbf  source/tests/fixtures/actor-field-shadow.ores
 fed9c6c8dc7046b5a34e48664d4c3e8b922d4404  source/tests/fixtures/actor-handle-read-positive.ores
 a5a69d67712b00d7b653e55681607afcafdbd1f4  source/tests/fixtures/actor-handle-write-positive.ores
 5f252ddd5c7353dad1d3fe709eb94c011568f35a  source/tests/fixtures/actor-immutable-write.ores
 e9faa7a58f18b3cccd7a87db57e030dbd804a3bd  source/tests/fixtures/actor-method-only-positive.ores
+b61189e225b13ce88d8092cc3ae927900d5c9251  source/tests/fixtures/actor-method-state-bool-result-reject.ores
+6898f4d26720729b7e242ed73d168e9219e26581  source/tests/fixtures/actor-method-state-bool-write-reject.ores
 87c8e1a23d4cb30aecc479952036c19f95d7d062  source/tests/fixtures/actor-method-state-escape-reject.ores
 2d1cffc1aba7574313b9dc30c4919b5e3ecbd6f3  source/tests/fixtures/actor-method-state-no-effects-reject.ores
 946ec9d8636d9aee2452e1f167ce03982def93da  source/tests/fixtures/actor-method-state-read-mutation-reject.ores
@@ -34,6 +37,7 @@ fac19869b9b83174947d4caa2ba6ce9532064a7b  source/tests/fixtures/actor-method-sta
 5916ed42fb46cf0e9b140b5d249bc84826829b5a  source/tests/fixtures/actor-owned-fields.ores
 75d8cace616d61f4887590ebe3259e6c2192d3c1  source/tests/fixtures/actor-raw-field-reject.ores
 89868526d1d31a24a05062a51d4086bf87bd1c19  source/tests/fixtures/actor-tagged-missing-effect-bound-reject.ores
+0bc2412355d5a086849721480a1411b439483104  source/tests/fixtures/actor-tagged-state-bool-write-reject.ores
 985589919d530651164d19f229de10288857177f  source/tests/fixtures/actor-tagged-write-only-read-effect-reject.ores
 8c3b59f6e820166795004d24bcb1cef1057a40f0  source/tests/fixtures/actor-unknown-field.ores
 40316ffefdf38f5a856eb63f46ea5a11a9c167f1  source/tests/fixtures/actor-unknown-write.ores

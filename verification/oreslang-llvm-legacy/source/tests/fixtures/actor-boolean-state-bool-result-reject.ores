@@ -1,0 +1,15 @@
+declare type match Signals as bool end
+define actor Recorder<messages=Signals> as
+ state { value: int = 0; }
+ receive(Signals m) with state.read {
+  match m {
+   true => {
+    const next = using state.read(|state| -> { return true; });
+   }
+   false => {
+    const next = using state.read(|state| -> { return false; });
+   }
+  }
+  return next;
+ }
+end
