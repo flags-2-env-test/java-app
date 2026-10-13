@@ -1404,6 +1404,9 @@ private:
             const std::unordered_set<std::string> none;
             const std::unordered_map<std::string, std::size_t> noCalls;
             for (const auto& field : actor.fields) {
+                if (contains_boolean(*field.initializer))
+                    throw std::runtime_error(
+                        "actor state initializer requires int expression");
                 validate_expression(*field.initializer, none, noCalls);
                 if (field.name == "state" || field.name == "using"
                         || field.name == "read" || field.name == "write")

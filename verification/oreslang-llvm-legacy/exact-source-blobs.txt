@@ -1,6 +1,6 @@
 76d595415ec7b0183d48d3c9949a8ac10788eadf  source/src/main/cpp/oreslang/backend/LlvmCodegen.cpp
 44d5336cc7131f21a2990433a584cab5d40e1006  source/src/main/cpp/oreslang/backend/LlvmCodegen.hpp
-f47c0e331b377b1a7c7461060d7cce400a9f3637  source/src/main/cpp/oreslang/frontend/Parser.cpp
+6f7aa58c275c9d78a7785f29bee806231eff200a  source/src/main/cpp/oreslang/frontend/Parser.cpp
 20d4052fe00d876f0e8f84a3e8e8d8700745b204  source/src/main/cpp/oreslang/frontend/Parser.hpp
 8b547a85207c999417b2d97180a3ac9866d4a933  source/src/main/cpp/oreslang/main.cpp
 d7c408f47f0955c99b50ad3381ccff96ec742dc2  source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c
@@ -36,6 +36,7 @@ af65a81169e5fe096fd9d877c0a0d6e0e932c390  source/tests/fixtures/actor-method-sta
 fac19869b9b83174947d4caa2ba6ce9532064a7b  source/tests/fixtures/actor-method-state-write.ores
 5916ed42fb46cf0e9b140b5d249bc84826829b5a  source/tests/fixtures/actor-owned-fields.ores
 75d8cace616d61f4887590ebe3259e6c2192d3c1  source/tests/fixtures/actor-raw-field-reject.ores
+8c3337d54f56d63d8c9a18ff73d9d7bc4f1883d6  source/tests/fixtures/actor-state-bool-init-reject.ores
 89868526d1d31a24a05062a51d4086bf87bd1c19  source/tests/fixtures/actor-tagged-missing-effect-bound-reject.ores
 0bc2412355d5a086849721480a1411b439483104  source/tests/fixtures/actor-tagged-state-bool-write-reject.ores
 985589919d530651164d19f229de10288857177f  source/tests/fixtures/actor-tagged-write-only-read-effect-reject.ores

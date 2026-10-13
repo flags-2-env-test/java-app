@@ -288,3 +288,9 @@ add_test(NAME reject_actor_boolean_state_bool_result_reject
  COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
  --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-boolean-state-bool-result-reject.ores
  --diagnostic "actor state callback requires int expressions")
+
+add_test(NAME reject_bool_fixed_int_state_initializer COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-state-bool-init-reject.ores
+ --diagnostic "actor state initializer requires int expression"
+ --diagnostic-not "actor instance data must be declared in one state map")
