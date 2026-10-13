@@ -247,3 +247,28 @@ add_test(NAME tagged_write_only_read_effect_denied
  --fixture ${FIX}/actor-tagged-write-only-read-effect-reject.ores
  --diagnostic "state.read operation not permitted by with effects")
 set_tests_properties(tagged_write_only_asan_ubsan PROPERTIES TIMEOUT 120)
+
+# All actor-state entrypoints require explicit with upper bounds.
+add_test(NAME tagged_missing_effects_fail_closed COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-tagged-missing-effect-bound-reject.ores
+ --diagnostic "actor state method requires explicit with effects")
+foreach(kind handle using)
+ foreach(mode read write)
+  add_test(NAME tagged_${kind}_${mode}_explicit_with_ir COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+   --compiler $<TARGET_FILE:oreslang-llvmc>
+   --fixture ${FIX}/actor-${kind}-${mode}-positive.ores
+   --ir "oreslang_actor_Probe_receive")
+  guest_runtime(native_fifteen_${kind}_${mode}_explicit_effects
+   source-actor-pipeline-fifteen-${kind}-${mode}.ores)
+  add_test(NAME native_asan_fifteen_${kind}_${mode}_explicit_effects
+   COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+   --compiler $<TARGET_FILE:oreslang-llvmc>
+   --fixture ${FIX}/source-actor-pipeline-fifteen-${kind}-${mode}.ores
+   --run 43 --clang ${ORE_CLANG} --runs 2 --sanitize
+   --actor-runtime ${RUNTIME}/ActorOwnedI64Heap.c
+   --scheduler-runtime ${RUNTIME}/NativeActorScheduler.c
+   --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c)
+  set_tests_properties(native_asan_fifteen_${kind}_${mode}_explicit_effects PROPERTIES TIMEOUT 120)
+ endforeach()
+endforeach()

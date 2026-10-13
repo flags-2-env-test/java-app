@@ -1569,7 +1569,13 @@ private:
                                 }
                             }
                             if (arm.state_loan) {
-                                if (method.effects_declared) {
+                                // No implicit effect escalation: tagged receive
+                                // callbacks follow the same explicit signature
+                                // upper bound as ordinary and boolean methods.
+                                if (!method.effects_declared)
+                                    throw std::runtime_error(
+                                        "actor state method requires explicit with effects");
+                                {
                                     const auto permits = [&](std::string_view effect) {
                                         return std::find(method.declared_effects.begin(),
                                             method.declared_effects.end(), effect)

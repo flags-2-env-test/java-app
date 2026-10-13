@@ -1,6 +1,6 @@
 76d595415ec7b0183d48d3c9949a8ac10788eadf  source/src/main/cpp/oreslang/backend/LlvmCodegen.cpp
 44d5336cc7131f21a2990433a584cab5d40e1006  source/src/main/cpp/oreslang/backend/LlvmCodegen.hpp
-c58cca76b27169670d735e8e6d03180cf9c20f72  source/src/main/cpp/oreslang/frontend/Parser.cpp
+2de2d54cbc9baef21dcdac2984b6e0011b3ff561  source/src/main/cpp/oreslang/frontend/Parser.cpp
 20d4052fe00d876f0e8f84a3e8e8d8700745b204  source/src/main/cpp/oreslang/frontend/Parser.hpp
 8b547a85207c999417b2d97180a3ac9866d4a933  source/src/main/cpp/oreslang/main.cpp
 d7c408f47f0955c99b50ad3381ccff96ec742dc2  source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c
@@ -18,6 +18,8 @@ f5d02c7398be64f5fc8a4a06c1fe42e55dd55a27  source/tests/contract.py
 9682246d8fb2c9e770c6c613f39173ade053e036  source/tests/fixtures/actor-abi-func-collision.ores
 7542570a10c62de330e7c975783c3d8142faf6ef  source/tests/fixtures/actor-duplicate-field.ores
 eaf0df8b006b92db43c9b2a65dfb7e161de8bdbf  source/tests/fixtures/actor-field-shadow.ores
+fed9c6c8dc7046b5a34e48664d4c3e8b922d4404  source/tests/fixtures/actor-handle-read-positive.ores
+a5a69d67712b00d7b653e55681607afcafdbd1f4  source/tests/fixtures/actor-handle-write-positive.ores
 5f252ddd5c7353dad1d3fe709eb94c011568f35a  source/tests/fixtures/actor-immutable-write.ores
 e9faa7a58f18b3cccd7a87db57e030dbd804a3bd  source/tests/fixtures/actor-method-only-positive.ores
 87c8e1a23d4cb30aecc479952036c19f95d7d062  source/tests/fixtures/actor-method-state-escape-reject.ores
@@ -31,10 +33,13 @@ af65a81169e5fe096fd9d877c0a0d6e0e932c390  source/tests/fixtures/actor-method-sta
 fac19869b9b83174947d4caa2ba6ce9532064a7b  source/tests/fixtures/actor-method-state-write.ores
 5916ed42fb46cf0e9b140b5d249bc84826829b5a  source/tests/fixtures/actor-owned-fields.ores
 75d8cace616d61f4887590ebe3259e6c2192d3c1  source/tests/fixtures/actor-raw-field-reject.ores
+89868526d1d31a24a05062a51d4086bf87bd1c19  source/tests/fixtures/actor-tagged-missing-effect-bound-reject.ores
 985589919d530651164d19f229de10288857177f  source/tests/fixtures/actor-tagged-write-only-read-effect-reject.ores
 8c3b59f6e820166795004d24bcb1cef1057a40f0  source/tests/fixtures/actor-unknown-field.ores
 40316ffefdf38f5a856eb63f46ea5a11a9c167f1  source/tests/fixtures/actor-unknown-write.ores
 eea478a5448408b7eed4e99362cda4ce77a378d2  source/tests/fixtures/actor-unsupported-field.ores
+627bc233fa101711a77e0fc5c5ebf125fc3f4919  source/tests/fixtures/actor-using-read-positive.ores
+6b174f369f6a9fd326ae016116c699ab6affeaae  source/tests/fixtures/actor-using-write-positive.ores
 1a11c919bef263fc265c8121f29fbc3f3a4a7e95  source/tests/fixtures/message-receive-bool-duplicate.ores
 093561bd687c10af0ae9effce9e494d1149774c0  source/tests/fixtures/message-receive-bool-match.ores
 5d25a703658d2361daec6678819cf9c9e35ac62a  source/tests/fixtures/message-receive-bool-nonexhaustive.ores
@@ -43,6 +48,10 @@ f68d5190d1a981de5880c664f7645a9792beb6ad  source/tests/fixtures/message-receive-
 adc894c8060b4d7a5ef80344c1ea15bcc3da27e3  source/tests/fixtures/message-receive-int-bool-match.ores
 6acc01f731dfaaaa7049e71b8ae1b6aa210bf7a0  source/tests/fixtures/source-actor-five-workers.ores
 7c57e51cc2b8cce1f3b112ddd0e58f2e699b6724  source/tests/fixtures/source-actor-pipeline-bidirectional.ores
+c78df6b84e3c40ff04620ab66ed0d93eee653807  source/tests/fixtures/source-actor-pipeline-fifteen-handle-read.ores
+8f99d1bfcb79079293da8730d2c5a3d582d6e13e  source/tests/fixtures/source-actor-pipeline-fifteen-handle-write.ores
+7e945f8ea7bf0402728e88fd85bc3f728082c14b  source/tests/fixtures/source-actor-pipeline-fifteen-using-read.ores
+d7ef69f2cc54ff3468c2d129a14621ba9659c600  source/tests/fixtures/source-actor-pipeline-fifteen-using-write.ores
 d7c1a902986c6e3a1fcf44cff58babb1e8083a2e  source/tests/fixtures/source-actor-send.ores
 2e0fa4c8b22a68b655d3ede307f0798f2465d07b  source/tests/fixtures/source-actor-spawn-stop.ores
 415c47ef9555ad1b9e29322d968fef73a830f297  source/tests/fixtures/source-tagged-int-payload-dispatch.ores
