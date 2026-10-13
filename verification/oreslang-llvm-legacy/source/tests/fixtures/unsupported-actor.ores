@@ -1,0 +1,7 @@
+// Method-only actors are legal without an actor state map.
+// Historical rejection has become a positive compiler-admission regression.
+define actor Worker as
+  fnc run(int value): int {
+    return value;
+  }
+end

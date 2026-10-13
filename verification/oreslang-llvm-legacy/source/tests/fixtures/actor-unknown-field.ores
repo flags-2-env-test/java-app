@@ -1,0 +1,6 @@
+// A state key is not an implicitly visible lexical method variable.
+// Reject unknown `phantom` while accepting the canonical state declaration.
+define actor Counter as {
+  state { base: int = 12; }
+  pub fnc read(): int { return phantom; }
+}

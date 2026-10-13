@@ -1,0 +1,14 @@
+8b547a85207c999417b2d97180a3ac9866d4a933  source/src/main/cpp/oreslang/main.cpp
+2dfd5efa76c43735c085d04630946f538cd33472  source/src/main/cpp/oreslang/frontend/Parser.cpp
+9d921caf6d1412421197a119c934b68d02b8accd  source/src/main/cpp/oreslang/frontend/Parser.hpp
+79744a59bfa2d8c1d93b78be672ec6e6042e8608  source/src/main/cpp/oreslang/backend/LlvmCodegen.cpp
+44d5336cc7131f21a2990433a584cab5d40e1006  source/src/main/cpp/oreslang/backend/LlvmCodegen.hpp
+f5d02c7398be64f5fc8a4a06c1fe42e55dd55a27  source/tests/contract.py
+7542570a10c62de330e7c975783c3d8142faf6ef  source/tests/fixtures/actor-duplicate-field.ores
+eea478a5448408b7eed4e99362cda4ce77a378d2  source/tests/fixtures/actor-unsupported-field.ores
+8c3b59f6e820166795004d24bcb1cef1057a40f0  source/tests/fixtures/actor-unknown-field.ores
+627317a58f4d0f5de946b8b729c7b5015ad6cbf7  source/tests/fixtures/actor-abi-actor-collision.ores
+9682246d8fb2c9e770c6c613f39173ade053e036  source/tests/fixtures/actor-abi-func-collision.ores
+9230b6588019f38288e61833b577d924be3cc73a  source/tests/fixtures/unsupported-actor.ores
+e9faa7a58f18b3cccd7a87db57e030dbd804a3bd  source/tests/fixtures/actor-method-only-positive.ores
+75d8cace616d61f4887590ebe3259e6c2192d3c1  source/tests/fixtures/actor-raw-field-reject.ores

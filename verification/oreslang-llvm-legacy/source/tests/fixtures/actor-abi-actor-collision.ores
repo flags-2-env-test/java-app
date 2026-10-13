@@ -1,0 +1,9 @@
+// Distinct actor/method pairs must not collide in generated native symbols.
+define actor A_B as {
+  state { value: int = 40; }
+  pub fnc c(): int { return 40; }
+}
+define actor A as {
+  state { value: int = 2; }
+  pub fnc B_c(): int { return 2; }
+}
