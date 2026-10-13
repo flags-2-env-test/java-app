@@ -41,6 +41,18 @@ struct GuestNominalCase {
     std::vector<std::uint8_t> wire;
     bool i64_payload = false;
 };
+// This is a syntactic variable-use test over the restricted i64 AST, not
+// an ownership proof. The parser has already forbidden callback escape and
+// arbitrary guest calls; it permits omitting unused native heap reads.
+bool uses_scalar_name(const Expression& expr, std::string_view name) {
+    if (expr.kind == Expression::Kind::Variable && expr.name == name)
+        return true;
+    if (expr.left && uses_scalar_name(*expr.left, name)) return true;
+    if (expr.right && uses_scalar_name(*expr.right, name)) return true;
+    for (const auto& argument : expr.arguments)
+        if (uses_scalar_name(*argument, name)) return true;
+    return false;
+}
 std::array<std::uint8_t, 32> sha(std::string_view text) {
     return llvm::SHA256::hash(llvm::ArrayRef<std::uint8_t>(
         reinterpret_cast<const std::uint8_t*>(text.data()), text.size()));
@@ -838,14 +850,25 @@ std::string emit_verified_llvm_ir(const Program& source) {
                 const auto& loan = *method.method_state_loan;
                 auto loanLocals = locals;
                 for (std::size_t i = 0; i < actor.fields.size(); ++i) {
-                    auto* key = builder.CreateAlloca(
-                        i64, nullptr, "state." + actor.fields[i].name);
-                    auto* snapshot = builder.CreateCall(fieldRead,
-                        {heap, currentDomain, currentEpoch,
-                         llvm::ConstantInt::get(i64, i)},
-                        "state.snapshot." + actor.fields[i].name);
-                    builder.CreateStore(snapshot, key);
-                    loanLocals.emplace("@state." + actor.fields[i].name, key);
+                    const auto& field = actor.fields[i];
+                    const auto borrowedName = "@state." + field.name;
+                    bool needsRead = uses_scalar_name(*loan.result, borrowedName);
+                    bool willWrite = false;
+                    for (const auto& assignment : loan.assignments) {
+                        if (assignment.field == field.name) willWrite = true;
+                        needsRead |= uses_scalar_name(*assignment.value, borrowedName);
+                    }
+                    if (!needsRead && !willWrite) continue;
+                    auto* key = builder.CreateAlloca(i64, nullptr,
+                        "state." + field.name);
+                    if (needsRead) {
+                        auto* snapshot = builder.CreateCall(fieldRead,
+                            {heap, currentDomain, currentEpoch,
+                             llvm::ConstantInt::get(i64, i)},
+                            "state.snapshot." + field.name);
+                        builder.CreateStore(snapshot, key);
+                    }
+                    loanLocals.emplace(borrowedName, key);
                 }
                 for (const auto& assignment : loan.assignments) {
                     const auto it = std::find_if(actor.fields.begin(), actor.fields.end(),

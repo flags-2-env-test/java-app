@@ -72,3 +72,26 @@ add_test(NAME method_read_IR_no_field_write COMMAND ${Python3_EXECUTABLE} ${CONT
 add_test(NAME method_write_IR_has_field_write COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
     --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-method-state-write.ores
     --ir "call void @ores_actor_i64_heap_field_write")
+
+find_program(ORE_CLANG NAMES clang clang-19 clang-18 clang-17 REQUIRED)
+add_test(NAME compiled_actor_method_state_native_heap
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-method-state-runtime.ores --run 43
+ --clang ${ORE_CLANG} --runs 3
+ --native-harness ${CMAKE_CURRENT_SOURCE_DIR}/source/tests/native_actor_method_state_harness.c
+ --actor-runtime ${CMAKE_CURRENT_SOURCE_DIR}/source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c)
+add_test(NAME optimized_actor_method_write_only_no_reads
+ COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-method-state-write-only.ores
+ --ir "oreslang_actor_Counter_reset"
+ --ir-not "call .*@ores_actor_i64_heap_field_read")
+add_test(NAME sanitizer_actor_method_state_native_heap
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-method-state-runtime.ores --run 43
+ --clang ${ORE_CLANG} --runs 3 --sanitize
+ --native-harness ${CMAKE_CURRENT_SOURCE_DIR}/source/tests/native_actor_method_state_harness.c
+ --actor-runtime ${CMAKE_CURRENT_SOURCE_DIR}/source/src/main/cpp/oreslang/runtime/ActorOwnedI64Heap.c)
+set_tests_properties(compiled_actor_method_state_native_heap sanitizer_actor_method_state_native_heap PROPERTIES TIMEOUT 100)

@@ -1,0 +1,22 @@
+// Native ABI test only: test-owned scheduler turn token authenticates each call.
+define actor Counter as
+    state { value: int = 40; }
+    pub fnc increment(int delta): int with state.read, state.write {
+        const next = self.handle_state(critical |state| -> {
+            state.value = state.value + delta;
+            return state.value;
+        });
+        return next;
+    }
+    pub fnc current(): int with state.read {
+        const now = using state.read(|state| -> { return state.value; });
+        return now;
+    }
+    pub fnc reset(int n): int with state.write {
+        const next = using state.write(critical |state| -> {
+            state.value = n;
+            return n;
+        });
+        return next;
+    }
+end
