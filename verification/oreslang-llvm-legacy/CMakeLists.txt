@@ -128,3 +128,36 @@ add_test(NAME historical_lexical_state_shadow_accept
  --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/actor-field-shadow.ores
  --ir "oreslang_actor_Counter_read")
 set_tests_properties(historical_multikey_actor_execution historical_multikey_actor_asan_ubsan PROPERTIES TIMEOUT 100)
+
+# Historical guest DATA send, native mailbox lifecycle, and typed 3-actor
+# pipeline, with original behavioral evidence, not just IR admission.
+set(RUNTIME ${CMAKE_CURRENT_SOURCE_DIR}/source/src/main/cpp/oreslang/runtime)
+function(guest_runtime name fixture)
+ add_test(NAME ${name} COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/${fixture}
+ --run 43 --clang ${ORE_CLANG} --runs 2
+ --actor-runtime ${RUNTIME}/ActorOwnedI64Heap.c
+ --scheduler-runtime ${RUNTIME}/NativeActorScheduler.c
+ --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c ${ARGN})
+ set_tests_properties(${name} PROPERTIES TIMEOUT 120)
+endfunction()
+guest_runtime(historical_spawn_stop_guest source-actor-spawn-stop.ores
+ --stderr "SOURCE_ACTOR_SPAWN_STOP_VERIFIED")
+guest_runtime(historical_send_guest source-actor-send.ores
+ --stderr "processed=2 last=3")
+guest_runtime(historical_five_workers_guest source-actor-five-workers.ores
+ --stderr "processed=2 last=3" --stderr-count 5)
+guest_runtime(historical_three_actor_typed_roundtrip source-actor-pipeline-bidirectional.ores
+ --stderr "SOURCE_PIPELINE_ROUNDTRIP_PASS actors=3 typed=1 forward=2 backward=2 result=19"
+ --pipeline-three-actor-summary --pipeline-context-summary)
+add_test(NAME historical_three_actor_asan_ubsan
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/source-actor-pipeline-bidirectional.ores
+ --run 43 --clang ${ORE_CLANG} --runs 2 --sanitize
+ --actor-runtime ${RUNTIME}/ActorOwnedI64Heap.c
+ --scheduler-runtime ${RUNTIME}/NativeActorScheduler.c
+ --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c
+ --stderr "SOURCE_PIPELINE_ROUNDTRIP_PASS actors=3 typed=1 forward=2 backward=2 result=19"
+ --pipeline-three-actor-summary --pipeline-context-summary)
+set_tests_properties(historical_three_actor_asan_ubsan PROPERTIES TIMEOUT 120)

@@ -1,0 +1,18 @@
+// Two actual asynchronous mailbox DATA messages, drained before STOP.
+define actor Worker as {
+    state { total: int = 0; }
+    pub fnc on_message(int n): int with state.read, state.write {
+        const next = self.handle_state(critical |state| -> {
+            state.total = state.total + n;
+            return state.total;
+        });
+        return next;
+    }
+}
+pub fnc main(): int {
+    const worker = spawn Worker();
+    worker.send(1);
+    worker.send(2);
+    stop worker;
+    return 43;
+}

@@ -1,0 +1,90 @@
+// Three real guest actors exchange typed DATA downstream and a typed
+// result upstream. All state is fixed-key and accessed through sealed loans.
+define enum Signal as
+    Data: int = 1
+    Result: int = 2
+end
+define match pattern PipeMessages as
+    Signal.Data
+    Signal.Result
+end
+
+define actor Source<messages=PipeMessages> as
+    state { count: int = 0; }
+    receive(PipeMessages m) with state.read, state.write {
+        do match m over {
+            on Signal.Data as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + n;
+                    return state.count;
+                });
+                self.forward(Signal.Data(next));
+            }
+            on Signal.Result as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.count = state.count + n;
+                    return state.count;
+                });
+            }
+        }
+        return next;
+    }
+end
+
+define actor Transform<messages=PipeMessages> as
+    state { value: int = 0; }
+    receive(PipeMessages m) with state.read, state.write {
+        do match m over {
+            on Signal.Data as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.value = n * 2;
+                    return state.value;
+                });
+                self.forward(Signal.Data(next));
+            }
+            on Signal.Result as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.value = n + 1;
+                    return state.value;
+                });
+                self.backward(Signal.Result(next));
+            }
+        }
+        return next;
+    }
+end
+
+define actor Sink<messages=PipeMessages> as
+    state { value: int = 0; }
+    receive(PipeMessages m) with state.read, state.write {
+        do match m over {
+            on Signal.Data as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.value = n + 3;
+                    return state.value;
+                });
+                self.backward(Signal.Result(next));
+            }
+            on Signal.Result as n {
+                const next = self.handle_state(critical |state| -> {
+                    state.value = n;
+                    return state.value;
+                });
+            }
+        }
+        return next;
+    }
+end
+
+pub fnc main(): int {
+    const source = spawn Source();
+    const transform = spawn Transform();
+    const sink = spawn Sink();
+    pipeline(source, transform, sink);
+    source.send(Signal.Data(5));
+    expect_pipeline(source, 19);
+    stop sink;
+    stop transform;
+    stop source;
+    return 43;
+}

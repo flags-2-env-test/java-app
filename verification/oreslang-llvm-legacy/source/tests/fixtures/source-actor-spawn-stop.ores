@@ -1,0 +1,13 @@
+// Native source compiler calls canonical actor state constructor on a worker.
+define actor Worker as {
+    state { base: int = 40; total: int = 0; }
+    pub fnc read(): int with state.read {
+        const result = self.handle_state(|state| -> { return state.base + 2; });
+        return result;
+    }
+}
+pub fnc main(): int {
+    const worker = spawn Worker();
+    stop worker;
+    return 43;
+}
