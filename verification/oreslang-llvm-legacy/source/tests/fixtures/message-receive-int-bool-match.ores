@@ -1,0 +1,11 @@
+declare type match Numbers as int end
+define actor Worker<messages=Numbers> as
+    state { total: int = 0; }
+    receive(Numbers m) {
+        match m {
+            true => { }
+            false => { }
+        }
+        return 0;
+    }
+end

@@ -197,3 +197,28 @@ add_test(NAME historical_boolean_received_asan_ubsan
  --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c
  --stderr "processed=2 last=3")
 set_tests_properties(historical_boolean_received_asan_ubsan PROPERTIES TIMEOUT 120)
+add_test(NAME historical_bool_nonexhaustive
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-nonexhaustive.ores
+ --diagnostic "nonexhaustive receive boolean match"
+ --diagnostic-not "actor instance data must be declared in one state map")
+add_test(NAME historical_bool_duplicate
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-duplicate.ores
+ --diagnostic "duplicate receive boolean match arm"
+ --diagnostic-not "actor instance data must be declared in one state map")
+add_test(NAME historical_bool_wrong_subject
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-wrong-subject.ores
+ --diagnostic "receive match must inspect Message parameter"
+ --diagnostic-not "actor instance data must be declared in one state map")
+add_test(NAME historical_bool_wrong_contract
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-int-bool-match.ores
+ --diagnostic "receive match true/false requires bool-only contract"
+ --diagnostic-not "actor instance data must be declared in one state map")
+add_test(NAME historical_bool_unnarrowed_payload
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-unnarrowed-payload.ores
+ --diagnostic "match arm Message payload binding is not narrowed"
+ --diagnostic-not "actor instance data must be declared in one state map")

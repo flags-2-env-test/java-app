@@ -1,0 +1,11 @@
+declare type match Signals as bool end
+define actor Worker<messages=Signals> as
+    state { total: int = 0; }
+    receive(Signals m) {
+        match m {
+            true => { }
+            true => { }
+        }
+        return 0;
+    }
+end
