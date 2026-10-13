@@ -78,13 +78,13 @@ end
 
 pub fnc main(): int {
     const source = spawn Source();
-    const transform = spawn Transform();
+    const middle = spawn Transform();
     const sink = spawn Sink();
-    pipeline(source, transform, sink);
+    pipeline(source, middle, sink);
     source.send(Signal.Data(5));
     expect_pipeline(source, 19);
     stop sink;
-    stop transform;
+    stop middle;
     stop source;
     return 43;
 }

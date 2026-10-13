@@ -35,7 +35,7 @@ fac19869b9b83174947d4caa2ba6ce9532064a7b  source/tests/fixtures/actor-method-sta
 40316ffefdf38f5a856eb63f46ea5a11a9c167f1  source/tests/fixtures/actor-unknown-write.ores
 eea478a5448408b7eed4e99362cda4ce77a378d2  source/tests/fixtures/actor-unsupported-field.ores
 6acc01f731dfaaaa7049e71b8ae1b6aa210bf7a0  source/tests/fixtures/source-actor-five-workers.ores
-fb7e5de2ef69a36efdfca7496c599c9efc436e15  source/tests/fixtures/source-actor-pipeline-bidirectional.ores
+7c57e51cc2b8cce1f3b112ddd0e58f2e699b6724  source/tests/fixtures/source-actor-pipeline-bidirectional.ores
 d7c1a902986c6e3a1fcf44cff58babb1e8083a2e  source/tests/fixtures/source-actor-send.ores
 2e0fa4c8b22a68b655d3ede307f0798f2465d07b  source/tests/fixtures/source-actor-spawn-stop.ores
 9230b6588019f38288e61833b577d924be3cc73a  source/tests/fixtures/unsupported-actor.ores
