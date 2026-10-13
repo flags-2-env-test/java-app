@@ -222,3 +222,28 @@ add_test(NAME historical_bool_unnarrowed_payload
  --compiler $<TARGET_FILE:oreslang-llvmc> --fixture ${FIX}/message-receive-bool-unnarrowed-payload.ores
  --diagnostic "match arm Message payload binding is not narrowed"
  --diagnostic-not "actor instance data must be declared in one state map")
+
+# Hardening: write-only tagged handler cannot issue *any* heap read.
+add_test(NAME tagged_write_only_no_native_read
+ COMMAND ${Python3_EXECUTABLE} -O ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/source-tagged-write-only.ores
+ --ir "call void @ores_actor_i64_heap_field_write"
+ --ir-not "call .*@ores_actor_i64_heap_field_read")
+guest_runtime(tagged_write_only_native_guest source-tagged-write-only.ores
+ --stderr "processed=2 last=7")
+add_test(NAME tagged_write_only_asan_ubsan
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/source-tagged-write-only.ores
+ --run 43 --clang ${ORE_CLANG} --runs 2 --sanitize
+ --actor-runtime ${RUNTIME}/ActorOwnedI64Heap.c
+ --scheduler-runtime ${RUNTIME}/NativeActorScheduler.c
+ --source-actor-runtime ${RUNTIME}/SourceActorBootstrap.c
+ --stderr "processed=2 last=7")
+add_test(NAME tagged_write_only_read_effect_denied
+ COMMAND ${Python3_EXECUTABLE} ${CONTRACT}
+ --compiler $<TARGET_FILE:oreslang-llvmc>
+ --fixture ${FIX}/actor-tagged-write-only-read-effect-reject.ores
+ --diagnostic "state.read operation not permitted by with effects")
+set_tests_properties(tagged_write_only_asan_ubsan PROPERTIES TIMEOUT 120)

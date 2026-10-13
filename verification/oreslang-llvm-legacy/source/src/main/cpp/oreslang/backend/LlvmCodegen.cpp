@@ -774,15 +774,31 @@ std::string emit_verified_llvm_ir(const Program& source) {
                         // region. The result is copied into the outer arm,
                         // never an address or mutable reference.
                         auto loanLocals = locals;
+                        // A declared write-only effect must not generate
+                        // implicit native reads of unrelated or blind-written
+                        // fields. Preload only actual state references; keep
+                        // write-only slots for the callback-local updated value.
                         for (std::size_t i = 0; i < actor.fields.size(); ++i) {
+                            const auto& field = actor.fields[i];
+                            const std::string borrowed = "@state." + field.name;
+                            bool needsRead = uses_scalar_name(
+                                *arm.state_loan->result, borrowed);
+                            bool willWrite = false;
+                            for (const auto& assignment : arm.state_loan->assignments) {
+                                if (assignment.field == field.name) willWrite = true;
+                                needsRead |= uses_scalar_name(*assignment.value, borrowed);
+                            }
+                            if (!needsRead && !willWrite) continue;
                             auto* key = builder.CreateAlloca(
-                                i64, nullptr, "state." + actor.fields[i].name);
-                            auto* snapshot = builder.CreateCall(fieldRead,
-                                {heap, currentDomain, currentEpoch,
-                                 llvm::ConstantInt::get(i64, i)},
-                                "state.snapshot." + actor.fields[i].name);
-                            builder.CreateStore(snapshot, key);
-                            loanLocals.emplace("@state." + actor.fields[i].name, key);
+                                i64, nullptr, "state." + field.name);
+                            if (needsRead) {
+                                auto* snapshot = builder.CreateCall(fieldRead,
+                                    {heap, currentDomain, currentEpoch,
+                                     llvm::ConstantInt::get(i64, i)},
+                                    "state.snapshot." + field.name);
+                                builder.CreateStore(snapshot, key);
+                            }
+                            loanLocals.emplace(borrowed, key);
                         }
                         for (const auto& assignment : arm.state_loan->assignments) {
                             const auto it = std::find_if(actor.fields.begin(), actor.fields.end(),

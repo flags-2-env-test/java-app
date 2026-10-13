@@ -1,0 +1,29 @@
+// Regression: the native tagged callback has *only* state.write.
+// It must never read any fixed state slot, even as an implicit snapshot.
+define enum Update as
+    Reset: int = 1
+end
+define match pattern Updates as
+    Update.Reset
+end
+define actor Recorder<messages=Updates> as
+    state { value: int = 40; unrelated: int = 99; }
+    receive(Updates m) with state.write {
+        do match m over {
+            on Update.Reset as n {
+                const result = self.handle_state(critical |state| -> {
+                    state.value = n;
+                    return n;
+                });
+            }
+        }
+        return result;
+    }
+end
+pub fnc main(): int {
+    const recorder = spawn Recorder();
+    recorder.send(Update.Reset(5));
+    recorder.send(Update.Reset(7));
+    stop recorder;
+    return 43;
+}
